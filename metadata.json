@@ -1,7 +1,0 @@
-{
-  "name": "The Gents — Virtual Cocktail Party",
-  "description": "A premium, AI-powered virtual event hosted by three fixed characters. Features cinematic scene generation, cocktail creation, and social games.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}

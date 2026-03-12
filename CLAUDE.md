@@ -1,92 +1,109 @@
-# The Gents
+# The Toast — by The Gents
 
-The Gents is a premium, AI-powered virtual cocktail party hosted by three fixed characters (Keys/The Alchemist, Bass/The Atmosphere, Lore/The Architect). Built with React 19, TypeScript, Vite, and Google Gemini AI.
+The Toast is a real-time, multiplayer virtual cocktail party. Three fixed host characters (Keys/The Alchemist, Bass/The Atmosphere, Lore/The Architect) host 4-8 invited guests through a cinematic, AI-powered 35-40 minute evening.
 
 ## Stack
 
-- **Runtime**: Vite dev server (port 3000), browser-based SPA
-- **UI**: React 19, Tailwind CSS (CDN), custom animations in `index.html`
-- **State**: React hooks (`useState` in `index.tsx`)
-- **AI**: Google Gemini API (`@google/genai`) via `geminiService.ts`
-- **Fonts**: Cormorant Garamond (display), DM Sans (body) — Google Fonts CDN
-- **Path alias**: `@/*` → `./*`
+| Layer | Technology |
+|-------|-----------|
+| Monorepo | pnpm workspaces + Turborepo |
+| Language | TypeScript (end-to-end) |
+| Frontend | React 19, React Router 7, Framer Motion 12 |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) |
+| State | React Context + Jotai |
+| Real-time | Socket.io (client ↔ server) |
+| Server | Express + Socket.io |
+| AI (text) | Google Gemini (`@google/genai`) |
+| AI (image) | Gemini image generation |
+| Video | Daily.co (planned) |
+| Fonts | Playfair Display (display), DM Sans (body) |
 
 ## Repo Structure
 
 ```
-index.html          HTML shell with Tailwind CDN config, theme vars, animations
-index.tsx           Entry point — createRoot + <App />
-App.tsx             Main app — state, view routing, composition
-types.ts            Enums (Act, Role, Vibe), interfaces (Participant, GameState, etc.)
-constants.ts        Host characters, mock guests, room codes, system instruction, INITIAL_SCENE
-geminiService.ts    All Gemini API calls (profile, scene, cocktail, confession, wrapped)
-components/         UI components
-  ui/Button.tsx     Reusable button primitive
-  LoadingScreen.tsx Fullscreen loading overlay
-  ProfileCard.tsx   Profile modal with stats
-  VideoTile.tsx     Participant tile in video grid
-  EventToast.tsx    Cocktail serve + confession voting overlays
-  views/            Full-screen views
-    LobbyView.tsx   Join form + lobby waiting room
-    WrappedView.tsx End-of-night summary
-hooks/              Custom hooks
-  useGameActions.ts All game logic (join, drinks, confessions, vibes, acts)
-docs/               Planning and architecture notes
+package.json              Root workspace config
+pnpm-workspace.yaml       Defines shared, server, client packages
+turbo.json                Build orchestration
+
+shared/                   @the-toast/shared — types & constants
+  src/types/              RoomState, events, gents, gemini interfaces
+  src/constants/          Brand colors, acts, vibes, scenes, room codes
+
+server/                   @the-toast/server — Express + Socket.io
+  src/index.ts            Entry: Express + Socket.io bootstrap
+  src/routes/             HTTP API (health, rooms, profiles)
+  src/socket/             Socket handlers (lobby, party, reactions)
+  src/services/           Room store, session state machine
+  src/services/gemini/    AI services (profiles, scenes, cocktails, confessions, wrapped)
+  src/utils/              Room codes, logger
+
+client/                   @the-toast/client — React SPA
+  src/main.tsx            Entry point
+  src/App.tsx             Provider stack + router (5 routes)
+  src/contexts/           Socket, Room, Party contexts
+  src/pages/              Landing, ProfileSetup, Lobby, Party, Wrapped
+  src/components/ui/      Button, Card, Badge, Spinner
+  src/components/profile/ ProfileCard, ProfileAvatar, ProfileSetupForm
+  src/components/mechanics/  ReactionBar, DrinkRound, ConfessionRound, GroupSnap, VibeShift
+  src/components/party/   SceneBackdrop, ActTransition, ActTimer
+  src/components/gent/    KeysPanel, BassPanel, LorekeeperPanel
+  src/components/layout/  GentControlPanel
+  src/styles/globals.css  Tailwind v4 theme + custom utilities
+  src/lib/animations.ts   Framer Motion variants
+
+assets/                   Brand logos
+docs/                     Architecture, roadmap, status, pitch, ledger
 ```
-
-## Key Entrypoints
-
-- `index.html` → `index.tsx` (monolithic — renders `<App>` directly)
-- Game flow: `LOBBY → ACT_I → ACT_II → ACT_III → ACT_IV → WRAPPED`
-- Views are rendered inline via conditional rendering in `App` component
 
 ## Commands
 
 ```bash
-npm run dev       # Start Vite dev server on port 3000
-npm run build     # Production build
-npx tsc --noEmit  # Type check
+pnpm install                              # Install all packages
+pnpm run build                            # Build all (Turborepo)
+pnpm run dev                              # Dev mode all packages
+pnpm --filter @the-toast/server dev       # Server only (port 3001)
+pnpm --filter @the-toast/client dev       # Client only (port 5173)
+pnpm --filter @the-toast/shared build     # Build shared types
 ```
 
 ## Environment
 
-- `GEMINI_API_KEY` in `.env.local` (loaded via Vite `define` in `vite.config.ts` as `process.env.API_KEY`)
-- Never commit `.env.local` or API keys
+Server env vars in `server/.env` (copy from `server/.env.example`):
+- `GEMINI_API_KEY` — **required**
+- `PORT` — default 3001
+- `CLIENT_URL` — default http://localhost:5173
+- `DAILY_API_KEY`, `UPSTASH_*`, `SUPABASE_*` — optional, have fallbacks
 
-## Deployment
+## Key Conventions
 
-- **Vercel** (free tier, push-to-deploy from `main`)
-- `vercel.json` configures Vite framework, SPA rewrites
-- Set `GEMINI_API_KEY` in Vercel dashboard → Project Settings → Environment Variables
-- GitHub repo: https://github.com/horkesh/The-Gents
+### Architecture
+- Shared types are canonical — both server and client import from `@the-toast/shared`
+- Server owns game state (in-memory Map, will move to Redis)
+- Client receives state via Socket.io events, never mutates directly
+- All AI calls happen server-side via `services/gemini/`
 
-## Conventions
-
-### State Management
-- All state lives in `App` component via `useState` hooks
-- No external state library yet — evaluate Zustand if complexity grows
-- Game state is a single `GameState` object
+### Socket Events
+- 14 client→server events, 19 server→client events (typed in `shared/src/types/events.ts`)
+- All game mechanics flow: client emits → server processes → server broadcasts result
 
 ### Components
 - UI primitives in `components/ui/`
-- Feature components in `components/`
-- Full-screen views in `components/views/`
-- Game logic in `hooks/useGameActions.ts`
-- `App.tsx` is the thin composition layer — state + view routing
-
-### AI Integration
-- All Gemini calls go through `geminiService.ts`
-- System instruction defined in `constants.ts` (`SYSTEM_INSTRUCTION`)
-- Model: `gemini-3-flash-preview`
-- All functions have try/catch with graceful fallback data
+- Domain components grouped: `profile/`, `mechanics/`, `party/`, `gent/`
+- Pages in `pages/` — one per route
 
 ### Styling
-- Tailwind CSS via CDN with custom config in `index.html` `<script>` tag
-- Theme colors: `gents-orange` (#ac3d29), `gents-teal` (#194f4c), `gents-gold` (#c9a84c), `gents-cream` (#f5f0e8), `gents-charcoal` (#1a1a1a)
+- Tailwind v4 with `@theme` in `globals.css`
+- Brand colors: ember (#ac3d29), teal (#194f4c), gold (#c9a84c), cream (#f5f0e8), charcoal (#1a1a1a)
 - Dark cinematic aesthetic — maintain consistency
-- Glass panel effect: `rgba(26,26,26,0.85)` + blur
 
-### Code Style
-- TypeScript (not strict mode yet)
-- Functional components with hooks
-- Keep the noir cocktail-party tone in all AI prompts and UI copy
+### AI Integration
+- System instruction in `server/src/services/gemini/prompts.ts`
+- Context assembly in `context.ts` (<500 tokens)
+- Each AI feature has its own service file with fallbacks
+- Models: `gemini-2.5-flash` (text), `gemini-2.5-flash-preview-image-generation` (images)
+
+## Deployment
+
+- **Client**: Vercel (Vite framework)
+- **Server**: Fly.io (Node.js, WebSocket support)
+- **GitHub**: https://github.com/horkesh/The-Gents

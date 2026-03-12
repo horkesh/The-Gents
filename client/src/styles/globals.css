@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ember: #ac3d29;
+  --color-ember-light: #c4533f;
+  --color-ember-dark: #8a311e;
+  --color-teal: #194f4c;
+  --color-teal-light: #1f6b66;
+  --color-teal-dark: #0f3432;
+  --color-gold: #c9a84c;
+  --color-gold-light: #d9be6e;
+  --color-gold-dark: #a08638;
+  --color-cream: #f5f0e8;
+  --color-cream-dark: #e8e0d2;
+  --color-charcoal: #1a1a1a;
+  --color-charcoal-light: #2a2a2a;
+  --color-charcoal-lighter: #3a3a3a;
+
+  --font-display: "Playfair Display", serif;
+  --font-body: "DM Sans", sans-serif;
+}
+
+/* Base styles */
+html {
+  font-family: var(--font-body);
+  color: var(--color-cream);
+  background-color: var(--color-charcoal);
+}
+
+/* Label utility — all-caps, ultra-wide tracking */
+.label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Display heading */
+.heading-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* Italic display */
+.heading-display-italic {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-charcoal-lighter);
+  border-radius: 2px;
+}
+
+/* Safe area padding for mobile */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}

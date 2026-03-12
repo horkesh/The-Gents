@@ -1,0 +1,46 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePartyContext } from '@/contexts/PartyContext';
+
+export function SceneBackdrop() {
+  const { scene } = usePartyContext();
+
+  return (
+    <div className="fixed inset-0 z-0">
+      <AnimatePresence mode="wait">
+        {scene?.backdropUrl && (
+          <motion.div
+            key={scene.backdropUrl}
+            className="absolute inset-0"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2, ease: 'easeOut' }}
+          >
+            <img
+              src={scene.backdropUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-charcoal/60" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scene description */}
+      {scene?.description && (
+        <div className="absolute bottom-32 left-0 right-0 text-center px-8 z-10">
+          <motion.p
+            key={scene.description}
+            className="heading-display-italic text-sm text-cream/30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+          >
+            {scene.description}
+          </motion.p>
+        </div>
+      )}
+    </div>
+  );
+}

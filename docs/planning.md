@@ -59,13 +59,13 @@ Accounts and API keys required. Each service has an in-memory fallback, so these
 
 Depends on Phase 1 Daily.co setup.
 
-- [ ] **VideoGrid** — `client/src/components/video/VideoGrid.tsx`
-  3 Gent tiles (larger, gold border) + guest grid (2-4 cols).
-- [ ] **VideoTile** — `client/src/components/video/VideoTile.tsx`
-  Video + name + role badge, active speaker highlight, camera-off fallback.
-- [ ] **VideoControls** — `client/src/components/video/VideoControls.tsx`
-  Mic toggle, camera toggle.
-- [ ] **DailyProvider integration** — wrap Party page, join/leave on mount/unmount.
+- [x] **VideoGrid** — `client/src/components/video/VideoGrid.tsx`
+  3 Gent tiles (larger, gold border) + guest grid, active speaker highlight.
+- [x] **VideoTile** — `client/src/components/video/VideoTile.tsx`
+  Video track + audio track, camera-off portrait fallback, speaker ring.
+- [x] **VideoControls** — `client/src/components/video/VideoControls.tsx`
+  Mic toggle, camera toggle with visual state.
+- [x] **DailyProvider integration** — Party page wrapped with DailyProvider, join/leave on mount/unmount, static avatar fallback when no video.
 
 ---
 
@@ -107,3 +107,4 @@ No external dependencies. Needs audio asset files.
 | 2026-03-13 | Created planning tracker | planning.md |
 | 2026-03-13 | Priority 0: All 6 quick fixes complete | planning.md, STATUS.md |
 | 2026-03-13 | Phase 1: External service layers built (Daily, Supabase, Redis) | planning.md |
+| 2026-03-13 | Phase 2: Video components (VideoGrid, VideoTile, VideoControls) + DailyProvider | planning.md |

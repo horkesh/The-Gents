@@ -10,6 +10,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          daily: ['@daily-co/daily-js', '@daily-co/daily-react'],
+          framer: ['framer-motion'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

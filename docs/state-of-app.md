@@ -1,0 +1,83 @@
+# State of the App
+
+## Current Architecture (v0 — Monolith)
+
+### Core Concept
+"The Gents" is a single-player AI-powered virtual cocktail party. Three fixed AI host characters (Keys/The Alchemist, Bass/The Atmosphere, Lore/The Architect) run a cinematic multi-act evening with cocktails, confessions, vibe shifts, and a personalized "Wrapped" summary. Guest profiles are generated from selfies via Gemini AI.
+
+### Key Components
+
+1. **Main App (`index.tsx` — 532 lines)**
+   * **Monolithic**: All components, state, game logic, and rendering live in one file.
+   * **Sub-components** (inline): `LoadingScreen`, `Button`, `ProfileCard`, `VideoTile`, `EventToast`
+   * **Render functions**: `renderLobby()`, `renderVideoGrid()`, `renderWrapped()`, `renderHostControls()`
+   * **State**: Single `useState<GameState>` plus `userName`, `userPhoto`, `viewedProfile`
+   * **Game flow**: `LOBBY → ACT_I → ACT_II → ACT_III → ACT_IV → WRAPPED`
+
+2. **AI Services (`geminiService.ts`)**
+   * All Gemini API calls: `generateProfile`, `generateScene`, `generateCocktail`, `generateConfessionPrompt`, `generateWrappedNote`
+   * Model: `gemini-3-flash-preview`
+   * System instruction from `constants.ts`
+   * All functions have try/catch with fallback data
+   * Prompts are inline in the service (not extracted to builders)
+
+3. **Data (`types.ts`, `constants.ts`)**
+   * `types.ts`: Enums (`Act`, `Role`, `Vibe`), interfaces (`Participant`, `Cocktail`, `Scene`, `Confession`, `GameState`), `INITIAL_SCENE` constant
+   * `constants.ts`: `THE_GENTS` (3 hosts), `MOCK_GUESTS` (2 sample guests), `ROOM_CODES`, `SYSTEM_INSTRUCTION`
+
+4. **Build & Styling**
+   * Vite with React plugin, port 3000
+   * Tailwind CSS via CDN (not bundled)
+   * Custom theme colors in `index.html` via `window.tailwind.config`
+   * Custom animations: `floatUp`, `fadeIn`
+   * Glass panel CSS class
+
+### Data Flow
+1. User enters name + selfie → `Gemini.generateProfile()` → creates `Participant`
+2. "Open The Doors" → `Gemini.generateScene()` → enters `ACT_I`
+3. In-act: trigger drinks (`generateCocktail`), confessions (`generateConfessionPrompt`), vibe shifts (`generateScene`)
+4. `nextAct()` progresses through acts, generating scenes
+5. `WRAPPED` → `generateWrappedNote()` → personalized summary
+
+### Known Issues / Technical Debt
+
+**Critical**
+1. `renderWrapped()` calls `useState` and `useEffect` inside a render function — violates React Rules of Hooks
+2. `index.html` has duplicate `<script>` tags for `index.tsx` (lines 82-83)
+
+**High**
+3. Monolithic `index.tsx` — 532 lines, all logic/UI/state in one file
+4. No error UI — AI failures return fake data silently (user never knows)
+5. No timeouts on `LoadingScreen` — if AI call fails silently, user is stuck
+6. Empty `App.tsx` and `services/geminiService.ts` — dead files
+7. `INITIAL_SCENE` lives in `types.ts` — should be in `constants.ts` with other data
+
+**Medium**
+8. Tailwind via CDN — works but no tree-shaking, no `@apply`, no build-time optimization
+9. No vendor chunking in Vite config
+10. No lint or test scripts in `package.json`
+11. Mock guests are hardcoded, always present — no dynamic guest management
+12. Reactions have no partner — single-player only, reactions are self-directed
+13. Voting simulation is random (`Math.random()` for yes/no counts) — fine for single-player
+
+---
+
+## Refactoring Plan
+
+### Phase 1: Critical Fixes
+- [ ] Extract `renderWrapped()` to a proper `WrappedView` component (hooks violation)
+- [ ] Remove duplicate `<script>` tag in `index.html`
+- [ ] Remove dead files (`App.tsx`, `services/geminiService.ts`)
+- [ ] Move `INITIAL_SCENE` from `types.ts` to `constants.ts`
+
+### Phase 2: Decomposition
+- [ ] Extract sub-components to individual files in `components/`
+- [ ] Extract view render functions to `components/views/`
+- [ ] Extract game logic to custom hooks in `hooks/`
+- [ ] Extract prompts to `services/prompts/` builders
+
+### Phase 3: Resilience
+- [ ] Add timeout + escape hatch to `LoadingScreen`
+- [ ] Add error UI for AI failures (retry buttons, error toasts)
+- [ ] Add `npx tsc --noEmit` as lint script
+- [ ] Evaluate bundled Tailwind (`@tailwindcss/vite`) vs CDN

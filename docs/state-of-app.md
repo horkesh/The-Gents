@@ -61,15 +61,15 @@
 
 **High**
 3. ~~Monolithic `index.tsx`~~ — **RESOLVED**: decomposed into 10 files
-4. No error UI — AI failures return fake data silently (user never knows)
-5. No timeouts on `LoadingScreen` — if AI call fails silently, user is stuck
+4. ~~No error UI~~ — **RESOLVED**: ErrorToast with in-character messages on all async failures
+5. ~~No timeouts on `LoadingScreen`~~ — **RESOLVED**: 30s timeout with "Continue Anyway" escape
 6. Empty `App.tsx` and `services/geminiService.ts` — dead files
 7. `INITIAL_SCENE` lives in `types.ts` — should be in `constants.ts` with other data
 
 **Medium**
 8. Tailwind via CDN — works but no tree-shaking, no `@apply`, no build-time optimization
-9. No vendor chunking in Vite config
-10. No lint or test scripts in `package.json`
+9. ~~No vendor chunking~~ — **RESOLVED**: react + genai split into cached vendor chunks
+10. ~~No lint or test scripts~~ — **RESOLVED**: `npm run lint` added
 11. Mock guests are hardcoded, always present — no dynamic guest management
 12. Reactions have no partner — single-player only, reactions are self-directed
 13. Voting simulation is random (`Math.random()` for yes/no counts) — fine for single-player
@@ -90,8 +90,9 @@
 - [x] Extract game logic to custom hooks in `hooks/`
 - [ ] Extract prompts to `services/prompts/` builders (deferred — low value at current scale)
 
-### Phase 3: Resilience
-- [ ] Add timeout + escape hatch to `LoadingScreen`
-- [ ] Add error UI for AI failures (retry buttons, error toasts)
-- [ ] Add `npx tsc --noEmit` as lint script
-- [ ] Evaluate bundled Tailwind (`@tailwindcss/vite`) vs CDN
+### Phase 3: Resilience ✓
+- [x] Add timeout + escape hatch to `LoadingScreen` (30s timeout, "Continue Anyway")
+- [x] Add error UI for AI failures (`ErrorToast` with in-character messages)
+- [x] Add `npx tsc --noEmit` as lint script
+- [x] Vendor chunking (react 12KB + genai 272KB split, app 491→208KB)
+- [ ] Evaluate bundled Tailwind (`@tailwindcss/vite`) vs CDN (deferred — CDN works fine for now)

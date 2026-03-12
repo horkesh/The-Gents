@@ -105,3 +105,40 @@ Broke the 532-line monolithic `index.tsx` into proper file structure following T
 
 ### What's Next
 - Phase 3: Loading timeouts, error UI, vendor chunking
+
+---
+
+## 2026-03-12 — Session 4: Resilience (Phase 3)
+
+### Context
+Users could get permanently stuck on loading screens if Gemini calls failed, and AI errors were completely invisible.
+
+### Changes
+
+1. **LoadingScreen timeout** — 30s timer with "Continue Anyway" escape hatch. Timer resets when loading message changes. No more permanent stuck states.
+
+2. **ErrorToast component** — glass-panel toast in `gents-orange` that auto-dismisses after 5s. Renders at top of screen with `z-50`.
+
+3. **Error UI on all async actions** — every Gemini-calling action (`handleJoin`, `startGame`, `triggerDrink`, `triggerConfession`, `changeVibe`, `nextAct`) now has try/catch with in-character error messages:
+   - "The doorman lost your invitation."
+   - "The doors are stuck."
+   - "The Alchemist spilled the cocktail."
+   - "The Lorekeeper lost his train of thought."
+   - "The Atmosphere couldn't shift the vibe."
+   - "The night stumbled between acts."
+
+4. **GameState.errorMessage** — new field in `types.ts`, wired through App.tsx.
+
+5. **Vendor chunking** — `vite.config.ts` splits react (12KB) and @google/genai (272KB) into separately cached chunks. App code: 491KB → 208KB.
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success (1.06s)
+  - `vendor-react`: 12KB
+  - `vendor-genai`: 272KB
+  - `app`: 208KB (was 491KB)
+
+### Remaining Debt
+- Tailwind via CDN (no tree-shaking) — fine for personal project
+- Mock guests hardcoded — fine for single-player
+- No tests — evaluate when scope grows

@@ -15,8 +15,17 @@ function getClient(): SupabaseClient | null {
   return client;
 }
 
-function isConfigured(): boolean {
+export function isConfigured(): boolean {
   return !!getClient();
+}
+
+async function getSessionId(db: SupabaseClient, code: string): Promise<string | null> {
+  const { data } = await db
+    .from('sessions')
+    .select('id')
+    .eq('code', code)
+    .single();
+  return data?.id || null;
 }
 
 /**
@@ -84,19 +93,13 @@ export async function saveProfile(
   if (!db) return null;
 
   try {
-    // Look up session ID by code
-    const { data: session } = await db
-      .from('sessions')
-      .select('id')
-      .eq('code', sessionCode)
-      .single();
-
-    if (!session) return null;
+    const sessionId = await getSessionId(db, sessionCode);
+    if (!sessionId) return null;
 
     const { data, error } = await db
       .from('profiles')
       .insert({
-        session_id: session.id,
+        session_id: sessionId,
         name: profile.name,
         photo_url: profile.photoUrl,
         portrait_url: profile.portraitUrl,
@@ -128,18 +131,13 @@ export async function saveSnapshot(
   if (!db) return;
 
   try {
-    const { data: session } = await db
-      .from('sessions')
-      .select('id')
-      .eq('code', sessionCode)
-      .single();
-
-    if (!session) return;
+    const sessionId = await getSessionId(db, sessionCode);
+    if (!sessionId) return;
 
     const { error } = await db
       .from('snapshots')
       .insert({
-        session_id: session.id,
+        session_id: sessionId,
         image_url: imageUrl,
         act,
       });
@@ -156,7 +154,8 @@ export async function saveSnapshot(
  */
 export async function saveWrapped(
   sessionCode: string,
-  participantId: string,
+  participantName: string,
+  participantAlias: string,
   stats: ParticipantStats,
   lorekeeperNote: string
 ): Promise<void> {
@@ -164,25 +163,22 @@ export async function saveWrapped(
   if (!db) return;
 
   try {
-    const { data: session } = await db
-      .from('sessions')
-      .select('id')
-      .eq('code', sessionCode)
-      .single();
+    const sessionId = await getSessionId(db, sessionCode);
+    if (!sessionId) return;
 
-    if (!session) return;
-
+    // Match by alias first (unique within session), fall back to name
     const { data: profile } = await db
       .from('profiles')
       .select('id')
-      .eq('session_id', session.id)
-      .eq('name', participantId)
+      .eq('session_id', sessionId)
+      .or(`alias.eq.${participantAlias},name.eq.${participantName}`)
+      .limit(1)
       .single();
 
     const { error } = await db
       .from('wrapped')
       .insert({
-        session_id: session.id,
+        session_id: sessionId,
         profile_id: profile?.id || null,
         stats,
         lorekeeper_note: lorekeeperNote,
@@ -193,5 +189,3 @@ export async function saveWrapped(
     logger.error('supabase', 'Failed to save wrapped card', err);
   }
 }
-
-export { isConfigured };

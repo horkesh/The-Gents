@@ -3,6 +3,8 @@ import { logger } from '../utils/logger.js';
 
 const DAILY_API_BASE = 'https://api.daily.co/v1';
 
+let warnedUnconfigured = false;
+
 function isConfigured(): boolean {
   return !!config.daily.apiKey;
 }
@@ -13,7 +15,10 @@ function isConfigured(): boolean {
  */
 export async function createDailyRoom(roomCode: string): Promise<string> {
   if (!isConfigured()) {
-    logger.warn('daily', 'Daily.co not configured — skipping room creation');
+    if (!warnedUnconfigured) {
+      logger.warn('daily', 'Daily.co not configured — video rooms will be skipped');
+      warnedUnconfigured = true;
+    }
     return '';
   }
 

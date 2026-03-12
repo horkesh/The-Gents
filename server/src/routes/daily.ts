@@ -1,5 +1,6 @@
 import { Router, type Router as RouterType } from 'express';
 import { getDailyRoomToken } from '../services/daily.js';
+import { logger } from '../utils/logger.js';
 
 export const dailyRoutes: RouterType = Router();
 
@@ -19,7 +20,7 @@ dailyRoutes.post('/daily/token', async (req, res) => {
 
     res.json({ token });
   } catch (err) {
-    console.error('[daily] Failed to generate token:', err);
+    logger.error('daily', 'Failed to generate token', err);
     res.status(500).json({ error: 'Failed to generate token' });
   }
 });

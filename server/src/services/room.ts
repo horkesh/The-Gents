@@ -16,8 +16,6 @@ export async function createRoom(hostId: string, hostRole: GentRole): Promise<{ 
     attempts++;
   }
 
-  const dailyRoomUrl = await createDailyRoom(code);
-
   const room: RoomState = {
     code,
     participants: [],
@@ -25,12 +23,19 @@ export async function createRoom(hostId: string, hostRole: GentRole): Promise<{ 
     scene: null,
     vibe: { energy: 'slow_burn', mood: 'anticipation' },
     events: [],
-    dailyRoomUrl,
+    dailyRoomUrl: '',
     startedAt: null,
     actStartedAt: null,
   };
 
   rooms.set(code, room);
+
+  // Create Daily.co room in background — don't block room creation
+  createDailyRoom(code).then((url) => {
+    if (url) {
+      room.dailyRoomUrl = url;
+    }
+  });
   logger.info('room', `Created room ${code} by ${hostRole} (${hostId})`);
 
   return { code, room };

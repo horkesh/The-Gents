@@ -73,4 +73,5 @@ export interface GameState {
   reactions: Array<{ id: string; emoji: string; sender: string; x: number }>;
   isLoading: boolean;
   loadingMessage: string;
+  errorMessage: string;
 }

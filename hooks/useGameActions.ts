@@ -7,6 +7,10 @@ type SetGameState = React.Dispatch<React.SetStateAction<GameState>>;
 
 export function useGameActions(gameState: GameState, setGameState: SetGameState) {
 
+  const flashError = (msg: string) => {
+    setGameState(prev => ({ ...prev, isLoading: false, errorMessage: msg }));
+  };
+
   const handleJoin = async (userName: string, userPhoto: string) => {
     setGameState(prev => ({ ...prev, isLoading: true, loadingMessage: 'Analyzing persona...' }));
 
@@ -32,38 +36,46 @@ export function useGameActions(gameState: GameState, setGameState: SetGameState)
         isLoading: false
       }));
     } catch (e) {
-      setGameState(prev => ({ ...prev, isLoading: false }));
+      flashError('The doorman lost your invitation. Try again.');
     }
   };
 
   const startGame = async () => {
     setGameState(prev => ({ ...prev, isLoading: true, loadingMessage: 'Setting the scene...' }));
-    const sceneData = await Gemini.generateScene("Act I", "Arrivals");
+    try {
+      const sceneData = await Gemini.generateScene("Act I", "Arrivals");
 
-    setGameState(prev => ({
-      ...prev,
-      isLoading: false,
-      act: Act.ACT_I,
-      currentScene: {
-        title: sceneData.title || "The Beginning",
-        description: sceneData.description || "The night begins.",
-        imageUrl: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop"
-      }
-    }));
+      setGameState(prev => ({
+        ...prev,
+        isLoading: false,
+        act: Act.ACT_I,
+        currentScene: {
+          title: sceneData.title || "The Beginning",
+          description: sceneData.description || "The night begins.",
+          imageUrl: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop"
+        }
+      }));
 
-    setTimeout(triggerDrink, 2000);
+      setTimeout(triggerDrink, 2000);
+    } catch (e) {
+      flashError('The doors are stuck. Try opening them again.');
+    }
   };
 
   const triggerDrink = async () => {
-    const drinkData = await Gemini.generateCocktail(gameState.currentScene?.title || "Party");
-    setGameState(prev => ({
-      ...prev,
-      activeCocktail: {
-        name: drinkData.name,
-        story: drinkData.story,
-        imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16549766b?q=80&w=500&auto=format&fit=crop"
-      }
-    }));
+    try {
+      const drinkData = await Gemini.generateCocktail(gameState.currentScene?.title || "Party");
+      setGameState(prev => ({
+        ...prev,
+        activeCocktail: {
+          name: drinkData.name,
+          story: drinkData.story,
+          imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16549766b?q=80&w=500&auto=format&fit=crop"
+        }
+      }));
+    } catch (e) {
+      flashError('The Alchemist spilled the cocktail. Try again.');
+    }
   };
 
   const acceptDrink = () => {
@@ -78,19 +90,23 @@ export function useGameActions(gameState: GameState, setGameState: SetGameState)
 
   const triggerConfession = async () => {
     setGameState(prev => ({ ...prev, isLoading: true, loadingMessage: 'Lorekeeper is thinking...' }));
-    const confessionData = await Gemini.generateConfessionPrompt(gameState.act);
-    setGameState(prev => ({
-      ...prev,
-      isLoading: false,
-      activeConfession: {
-        question: confessionData.question,
-        commentary: confessionData.commentary,
-        yesCount: 0,
-        noCount: 0,
-        totalVotes: 0,
-        isActive: true
-      }
-    }));
+    try {
+      const confessionData = await Gemini.generateConfessionPrompt(gameState.act);
+      setGameState(prev => ({
+        ...prev,
+        isLoading: false,
+        activeConfession: {
+          question: confessionData.question,
+          commentary: confessionData.commentary,
+          yesCount: 0,
+          noCount: 0,
+          totalVotes: 0,
+          isActive: true
+        }
+      }));
+    } catch (e) {
+      flashError('The Lorekeeper lost his train of thought. Try again.');
+    }
   };
 
   const voteConfession = (vote: 'YES' | 'NO') => {
@@ -123,21 +139,25 @@ export function useGameActions(gameState: GameState, setGameState: SetGameState)
 
   const changeVibe = async (vibe: Vibe) => {
     setGameState(prev => ({ ...prev, isLoading: true, loadingMessage: `Shifting vibe...` }));
-    const sceneData = await Gemini.generateScene(gameState.act, vibe);
-    let imageUrl = gameState.currentScene?.imageUrl || "";
-    if (vibe === Vibe.IGNITION) imageUrl = "https://images.unsplash.com/photo-1570572225016-560df365c192?q=80&w=1920&auto=format&fit=crop";
-    if (vibe === Vibe.CRUISE) imageUrl = "https://images.unsplash.com/photo-1559333086-b0a56225a93c?q=80&w=1920&auto=format&fit=crop";
+    try {
+      const sceneData = await Gemini.generateScene(gameState.act, vibe);
+      let imageUrl = gameState.currentScene?.imageUrl || "";
+      if (vibe === Vibe.IGNITION) imageUrl = "https://images.unsplash.com/photo-1570572225016-560df365c192?q=80&w=1920&auto=format&fit=crop";
+      if (vibe === Vibe.CRUISE) imageUrl = "https://images.unsplash.com/photo-1559333086-b0a56225a93c?q=80&w=1920&auto=format&fit=crop";
 
-    setGameState(prev => ({
-      ...prev,
-      isLoading: false,
-      currentVibe: vibe,
-      currentScene: {
-        title: sceneData.title,
-        description: sceneData.description,
-        imageUrl: imageUrl
-      }
-    }));
+      setGameState(prev => ({
+        ...prev,
+        isLoading: false,
+        currentVibe: vibe,
+        currentScene: {
+          title: sceneData.title,
+          description: sceneData.description,
+          imageUrl: imageUrl
+        }
+      }));
+    } catch (e) {
+      flashError('The Atmosphere couldn\'t shift the vibe. Try again.');
+    }
   };
 
   const nextAct = async () => {
@@ -154,17 +174,21 @@ export function useGameActions(gameState: GameState, setGameState: SetGameState)
       setGameState(prev => ({ ...prev, act: next }));
     } else {
       setGameState(prev => ({ ...prev, isLoading: true, loadingMessage: 'Transitioning...' }));
-      const sceneData = await Gemini.generateScene(next, "Transition");
-      setGameState(prev => ({
-        ...prev,
-        act: next,
-        isLoading: false,
-        currentScene: {
-          title: sceneData.title,
-          description: sceneData.description,
-          imageUrl: "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1920&auto=format&fit=crop"
-        }
-      }));
+      try {
+        const sceneData = await Gemini.generateScene(next, "Transition");
+        setGameState(prev => ({
+          ...prev,
+          act: next,
+          isLoading: false,
+          currentScene: {
+            title: sceneData.title,
+            description: sceneData.description,
+            imageUrl: "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1920&auto=format&fit=crop"
+          }
+        }));
+      } catch (e) {
+        flashError('The night stumbled between acts. Try again.');
+      }
     }
   };
 

@@ -3,6 +3,7 @@ import { Act, Vibe, Participant, GameState } from './types';
 import { THE_GENTS, INITIAL_SCENE } from './constants';
 import { useGameActions } from '@/hooks/useGameActions';
 import LoadingScreen from '@/components/LoadingScreen';
+import ErrorToast from '@/components/ErrorToast';
 import ProfileCard from '@/components/ProfileCard';
 import VideoTile from '@/components/VideoTile';
 import EventToast from '@/components/EventToast';
@@ -21,7 +22,8 @@ const App = () => {
     activeConfession: null,
     reactions: [],
     isLoading: false,
-    loadingMessage: ''
+    loadingMessage: '',
+    errorMessage: ''
   });
 
   const [userName, setUserName] = useState('');
@@ -55,7 +57,20 @@ const App = () => {
       )}
 
       {/* Loading */}
-      {gameState.isLoading && <LoadingScreen message={gameState.loadingMessage} />}
+      {gameState.isLoading && (
+        <LoadingScreen
+          message={gameState.loadingMessage}
+          onDismiss={() => setGameState(prev => ({ ...prev, isLoading: false }))}
+        />
+      )}
+
+      {/* Error toast */}
+      {gameState.errorMessage && (
+        <ErrorToast
+          message={gameState.errorMessage}
+          onDismiss={() => setGameState(prev => ({ ...prev, errorMessage: '' }))}
+        />
+      )}
 
       {/* Views */}
       {gameState.act === Act.LOBBY && (

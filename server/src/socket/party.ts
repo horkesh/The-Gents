@@ -1,6 +1,6 @@
 import type { Namespace, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
-import { getRoom } from '../services/room.js';
+import { getRoom, getParticipantDisplayName } from '../services/room.js';
 import { startParty, advanceAct, wrapUp } from '../services/session.js';
 import { assembleContext } from '../services/gemini/context.js';
 import { generateCocktail } from '../services/gemini/cocktails.js';
@@ -11,9 +11,6 @@ import { logger } from '../utils/logger.js';
 
 type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type PartyNamespace = Namespace<ClientToServerEvents, ServerToClientEvents>;
-
-// Track socket → room mapping
-const socketRooms = new Map<string, string>();
 
 // Active confession votes per room
 const confessionVotes = new Map<string, { question: string; votes: Map<string, boolean> }>();
@@ -162,10 +159,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const code = getRoomCode(socket);
     if (!code) return;
 
-    const room = await getRoom(code);
-    const participant = room?.participants.find((p) => p.id === socket.id);
-    const displayName = participant?.alias || participant?.name || socket.id;
-
+    const displayName = await getParticipantDisplayName(code, socket.id, socket.id);
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksAccepted++;
 
@@ -179,10 +173,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const code = getRoomCode(socket);
     if (!code) return;
 
-    const room = await getRoom(code);
-    const participant = room?.participants.find((p) => p.id === socket.id);
-    const displayName = participant?.alias || participant?.name || socket.id;
-
+    const displayName = await getParticipantDisplayName(code, socket.id, socket.id);
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksDodged++;
 
@@ -343,37 +334,49 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     }
   });
 
-  // Track room for this socket
-  socket.on('JOIN_ROOM', ({ code }) => {
-    socketRooms.set(socket.id, code);
-  });
 }
 
 async function generateWrappedCards(namespace: PartyNamespace, code: string) {
   const room = await getRoom(code);
   if (!room) return;
 
-  const sessionTitle = await generateSessionTitle(room.scene?.location || 'the evening');
-
-  for (const participant of room.participants) {
-    const stats = getOrCreateStats(code, participant.id);
+  try {
+    const sessionTitle = await generateSessionTitle(room.scene?.location || 'the evening');
     const roomKeyMoments = keyMoments.get(code) || [];
-    const wrappedResult = await generateWrappedNote({
-      alias: participant.alias || participant.name,
-      traits: [...participant.traits].filter(Boolean),
-      stats,
-      keyMoments: roomKeyMoments,
-    });
 
-    // Send personalized wrapped card to each participant
-    namespace.to(code).emit('WRAPPED_READY', {
-      stats,
-      lorekeeperNote: wrappedResult.lorekeeperNote,
-      sessionTitle,
-      photos: [],
-      profile: participant,
-    });
+    for (const participant of room.participants) {
+      const stats = getOrCreateStats(code, participant.id);
+      const wrappedResult = await generateWrappedNote({
+        alias: participant.alias || participant.name,
+        traits: [...participant.traits].filter(Boolean),
+        stats,
+        keyMoments: roomKeyMoments,
+      });
+
+      namespace.to(code).emit('WRAPPED_READY', {
+        stats,
+        lorekeeperNote: wrappedResult.lorekeeperNote,
+        sessionTitle,
+        photos: [],
+        profile: participant,
+      });
+    }
+  } catch (err) {
+    logger.error('party', 'Failed to generate wrapped cards', err);
+  } finally {
+    cleanupRoom(code);
   }
+}
+
+/**
+ * Purges all in-memory state for a completed room.
+ */
+function cleanupRoom(code: string) {
+  keyMoments.delete(code);
+  participantStats.delete(code);
+  confessionVotes.delete(code);
+  snapUploads.delete(code);
+  logger.info('party', `Cleaned up state for room ${code}`);
 }
 
 function sleep(ms: number): Promise<void> {

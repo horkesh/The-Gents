@@ -102,6 +102,16 @@ export async function updateRoomState(code: string, updates: Partial<RoomState>)
   Object.assign(room, updates);
 }
 
+export async function getParticipantDisplayName(
+  code: string,
+  socketId: string,
+  fallback: string = ''
+): Promise<string> {
+  const room = await getRoom(code);
+  const participant = room?.participants.find((p) => p.id === socketId);
+  return participant?.alias || participant?.name || fallback;
+}
+
 export async function destroyRoom(code: string): Promise<void> {
   rooms.delete(code.toUpperCase());
   logger.info('room', `Destroyed room ${code}`);

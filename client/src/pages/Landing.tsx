@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, slideUp } from '@/lib/animations';
+import { GENT_ARCHETYPES } from '@the-toast/shared';
 import type { GentRole } from '@the-toast/shared';
 
-const GENT_ROLES: { role: GentRole; title: string; icon: string; desc: string }[] = [
-  { role: 'keys', title: 'THE ALCHEMIST', icon: '🍸', desc: 'Cocktails & taste' },
-  { role: 'bass', title: 'THE ATMOSPHERE', icon: '🎵', desc: 'Mood & energy' },
-  { role: 'lorekeeper', title: 'THE ARCHITECT', icon: '📜', desc: 'Story & pacing' },
-];
+const GENT_ROLES = (Object.values(GENT_ARCHETYPES) as Array<typeof GENT_ARCHETYPES[GentRole]>).map((g) => ({
+  role: g.role,
+  title: g.controlPanelTitle,
+  icon: g.controlPanelIcon,
+  desc: g.superpower,
+}));
 
 export function Landing() {
   const navigate = useNavigate();

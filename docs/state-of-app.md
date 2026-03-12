@@ -1,18 +1,32 @@
 # State of the App
 
-## Current Architecture (v0 — Monolith)
+## Current Architecture (v1 — Decomposed)
 
 ### Core Concept
 "The Gents" is a single-player AI-powered virtual cocktail party. Three fixed AI host characters (Keys/The Alchemist, Bass/The Atmosphere, Lore/The Architect) run a cinematic multi-act evening with cocktails, confessions, vibe shifts, and a personalized "Wrapped" summary. Guest profiles are generated from selfies via Gemini AI.
 
 ### Key Components
 
-1. **Main App (`index.tsx` — 532 lines)**
-   * **Monolithic**: All components, state, game logic, and rendering live in one file.
-   * **Sub-components** (inline): `LoadingScreen`, `Button`, `ProfileCard`, `VideoTile`, `EventToast`
-   * **Render functions**: `renderLobby()`, `renderVideoGrid()`, `renderWrapped()`, `renderHostControls()`
-   * **State**: Single `useState<GameState>` plus `userName`, `userPhoto`, `viewedProfile`
-   * **Game flow**: `LOBBY → ACT_I → ACT_II → ACT_III → ACT_IV → WRAPPED`
+1. **App Shell (`App.tsx`)**
+   * Thin composition layer — state + view routing
+   * State: `useState<GameState>` plus `userName`, `userPhoto`, `viewedProfile`
+   * Delegates all game logic to `useGameActions` hook
+   * Game flow: `LOBBY → ACT_I → ACT_II → ACT_III → ACT_IV → WRAPPED`
+
+2. **Entry Point (`index.tsx` — 7 lines)**
+   * Just `createRoot` + `<App />` render
+
+3. **Components**
+   * `components/ui/Button.tsx` — reusable button primitive (primary/secondary/ghost/danger)
+   * `components/LoadingScreen.tsx` — fullscreen loading overlay
+   * `components/ProfileCard.tsx` — profile modal with stats
+   * `components/VideoTile.tsx` — participant tile in video grid
+   * `components/EventToast.tsx` — cocktail serve + confession voting overlays
+   * `components/views/LobbyView.tsx` — join form + lobby waiting room
+   * `components/views/WrappedView.tsx` — end-of-night summary with AI lore
+
+4. **Hooks**
+   * `hooks/useGameActions.ts` — all game logic (join, drinks, confessions, vibes, acts, reactions)
 
 2. **AI Services (`geminiService.ts`)**
    * All Gemini API calls: `generateProfile`, `generateScene`, `generateCocktail`, `generateConfessionPrompt`, `generateWrappedNote`
@@ -46,7 +60,7 @@
 2. `index.html` has duplicate `<script>` tags for `index.tsx` (lines 82-83)
 
 **High**
-3. Monolithic `index.tsx` — 532 lines, all logic/UI/state in one file
+3. ~~Monolithic `index.tsx`~~ — **RESOLVED**: decomposed into 10 files
 4. No error UI — AI failures return fake data silently (user never knows)
 5. No timeouts on `LoadingScreen` — if AI call fails silently, user is stuck
 6. Empty `App.tsx` and `services/geminiService.ts` — dead files
@@ -70,11 +84,11 @@
 - [x] Remove dead files (`App.tsx`, `services/geminiService.ts`)
 - [x] Move `INITIAL_SCENE` from `types.ts` to `constants.ts`
 
-### Phase 2: Decomposition
-- [ ] Extract sub-components to individual files in `components/`
-- [ ] Extract view render functions to `components/views/`
-- [ ] Extract game logic to custom hooks in `hooks/`
-- [ ] Extract prompts to `services/prompts/` builders
+### Phase 2: Decomposition ✓
+- [x] Extract sub-components to individual files in `components/`
+- [x] Extract view render functions to `components/views/`
+- [x] Extract game logic to custom hooks in `hooks/`
+- [ ] Extract prompts to `services/prompts/` builders (deferred — low value at current scale)
 
 ### Phase 3: Resilience
 - [ ] Add timeout + escape hatch to `LoadingScreen`

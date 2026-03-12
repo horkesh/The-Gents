@@ -71,3 +71,37 @@ Set up GitHub push-to-deploy pipeline and fixed all critical audit findings.
 ### What's Next
 - Phase 2: Decompose monolithic `index.tsx` into components/views/hooks
 - Phase 3: Add error UI, loading timeouts, vendor chunking
+
+---
+
+## 2026-03-12 — Session 3: Decomposition (Phase 2)
+
+### Context
+Broke the 532-line monolithic `index.tsx` into proper file structure following Tonight's patterns.
+
+### Changes
+
+**New files created (10):**
+- `components/ui/Button.tsx` — reusable button primitive
+- `components/LoadingScreen.tsx` — fullscreen loading overlay
+- `components/ProfileCard.tsx` — profile modal with stats
+- `components/VideoTile.tsx` — participant tile
+- `components/EventToast.tsx` — cocktail/confession overlays
+- `components/views/LobbyView.tsx` — join form + lobby waiting room
+- `components/views/WrappedView.tsx` — end-of-night summary
+- `hooks/useGameActions.ts` — all game logic extracted from App
+- `App.tsx` — thin composition layer (state + view routing)
+- `index.tsx` — entry point only (7 lines)
+
+**Architecture:**
+- `index.tsx` → `App.tsx` → views + components
+- `App.tsx` owns state, delegates actions to `useGameActions` hook
+- Views receive data via props, call back via callbacks
+- No prop drilling — views get exactly what they need
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success (1.02s, 491KB app chunk)
+
+### What's Next
+- Phase 3: Loading timeouts, error UI, vendor chunking

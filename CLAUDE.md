@@ -14,14 +14,24 @@ The Gents is a premium, AI-powered virtual cocktail party hosted by three fixed 
 ## Repo Structure
 
 ```
-index.html        HTML shell with Tailwind CDN config, theme vars, animations
-index.tsx         Main React app — all components, state, and logic (monolith)
-App.tsx           Empty — unused
-types.ts          Enums (Act, Role, Vibe), interfaces (Participant, GameState, etc.)
-constants.ts      Host characters, mock guests, room codes, system instruction
-geminiService.ts  All Gemini API calls (profile, scene, cocktail, confession, wrapped)
-services/         Contains duplicate empty geminiService.ts — unused
-docs/             Planning and architecture notes
+index.html          HTML shell with Tailwind CDN config, theme vars, animations
+index.tsx           Entry point — createRoot + <App />
+App.tsx             Main app — state, view routing, composition
+types.ts            Enums (Act, Role, Vibe), interfaces (Participant, GameState, etc.)
+constants.ts        Host characters, mock guests, room codes, system instruction, INITIAL_SCENE
+geminiService.ts    All Gemini API calls (profile, scene, cocktail, confession, wrapped)
+components/         UI components
+  ui/Button.tsx     Reusable button primitive
+  LoadingScreen.tsx Fullscreen loading overlay
+  ProfileCard.tsx   Profile modal with stats
+  VideoTile.tsx     Participant tile in video grid
+  EventToast.tsx    Cocktail serve + confession voting overlays
+  views/            Full-screen views
+    LobbyView.tsx   Join form + lobby waiting room
+    WrappedView.tsx End-of-night summary
+hooks/              Custom hooks
+  useGameActions.ts All game logic (join, drinks, confessions, vibes, acts)
+docs/               Planning and architecture notes
 ```
 
 ## Key Entrypoints
@@ -58,9 +68,11 @@ npx tsc --noEmit  # Type check
 - Game state is a single `GameState` object
 
 ### Components
-- Currently all inline in `index.tsx` — decompose as needed
-- Sub-components: `LoadingScreen`, `Button`, `ProfileCard`, `VideoTile`, `EventToast`
-- View rendering: `renderLobby()`, `renderVideoGrid()`, `renderWrapped()`, `renderHostControls()`
+- UI primitives in `components/ui/`
+- Feature components in `components/`
+- Full-screen views in `components/views/`
+- Game logic in `hooks/useGameActions.ts`
+- `App.tsx` is the thin composition layer — state + view routing
 
 ### AI Integration
 - All Gemini calls go through `geminiService.ts`

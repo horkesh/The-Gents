@@ -64,11 +64,11 @@
 
 ## Refactoring Plan
 
-### Phase 1: Critical Fixes
-- [ ] Extract `renderWrapped()` to a proper `WrappedView` component (hooks violation)
-- [ ] Remove duplicate `<script>` tag in `index.html`
-- [ ] Remove dead files (`App.tsx`, `services/geminiService.ts`)
-- [ ] Move `INITIAL_SCENE` from `types.ts` to `constants.ts`
+### Phase 1: Critical Fixes ✓
+- [x] Extract `renderWrapped()` to a proper `WrappedView` component (hooks violation)
+- [x] Remove duplicate `<script>` tag in `index.html` (was only in local drift, not on remote)
+- [x] Remove dead files (`App.tsx`, `services/geminiService.ts`)
+- [x] Move `INITIAL_SCENE` from `types.ts` to `constants.ts`
 
 ### Phase 2: Decomposition
 - [ ] Extract sub-components to individual files in `components/`

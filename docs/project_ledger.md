@@ -38,3 +38,36 @@ Adopted project discipline from the Tonight repo. Set up CLAUDE.md, napkin runbo
 - Remove duplicate script tag
 - Clean up dead files
 - Add lint script to package.json
+
+---
+
+## 2026-03-12 — Session 2: GitHub + Vercel + Critical Fixes
+
+### Context
+Set up GitHub push-to-deploy pipeline and fixed all critical audit findings.
+
+### Infrastructure
+- **Git initialized** and connected to `https://github.com/horkesh/The-Gents`
+- **Vercel** linked via dashboard import, `vercel.json` added (Vite framework, SPA rewrites)
+- **GEMINI_API_KEY** set in Vercel environment variables
+
+### Fixes Applied
+
+1. **React hooks violation** — extracted `renderWrapped()` (which illegally called `useState`/`useEffect` inside a render function) to a proper `WrappedView` component. Hooks now run at component top level.
+
+2. **Dead files removed** — deleted empty `App.tsx` and empty `services/geminiService.ts`.
+
+3. **INITIAL_SCENE relocated** — moved from `types.ts` to `constants.ts` where it belongs with other data constants.
+
+4. **Lint script added** — `"lint": "tsc --noEmit"` in `package.json`.
+
+5. **Deployment section** — added to `CLAUDE.md` with Vercel config and GitHub URL.
+
+### Verification
+- `npx tsc --noEmit`: 0 errors
+- `npm run build`: success (1.44s, 491KB app chunk)
+- `git push`: all changes live on `main`
+
+### What's Next
+- Phase 2: Decompose monolithic `index.tsx` into components/views/hooks
+- Phase 3: Add error UI, loading timeouts, vendor chunking

@@ -6,6 +6,7 @@ import { config } from './config.js';
 import { roomRoutes } from './routes/rooms.js';
 import { profileRoutes } from './routes/profiles.js';
 import { healthRoutes } from './routes/health.js';
+import { dailyRoutes } from './routes/daily.js';
 import { setupSocketHandler } from './socket/handler.js';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
 
@@ -27,6 +28,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api', healthRoutes);
 app.use('/api', roomRoutes);
 app.use('/api', profileRoutes);
+app.use('/api', dailyRoutes);
 
 // Socket.io
 const partyNamespace = io.of('/party');

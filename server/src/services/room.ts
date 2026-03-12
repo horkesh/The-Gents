@@ -1,6 +1,7 @@
 import type { RoomState, ParticipantProfile, GentRole } from '@the-toast/shared';
 import { generateRoomCode } from '../utils/codes.js';
 import { logger } from '../utils/logger.js';
+import { createDailyRoom } from './daily.js';
 
 // In-memory room store (will be backed by Redis in Phase 2 expansion)
 const rooms = new Map<string, RoomState>();
@@ -15,6 +16,8 @@ export async function createRoom(hostId: string, hostRole: GentRole): Promise<{ 
     attempts++;
   }
 
+  const dailyRoomUrl = await createDailyRoom(code);
+
   const room: RoomState = {
     code,
     participants: [],
@@ -22,7 +25,7 @@ export async function createRoom(hostId: string, hostRole: GentRole): Promise<{ 
     scene: null,
     vibe: { energy: 'slow_burn', mood: 'anticipation' },
     events: [],
-    dailyRoomUrl: '', // Will be set when Daily.co is integrated
+    dailyRoomUrl,
     startedAt: null,
     actStartedAt: null,
   };

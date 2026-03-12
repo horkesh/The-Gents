@@ -35,20 +35,22 @@ Accounts and API keys required. Each service has an in-memory fallback, so these
 
 - [ ] **Daily.co account + API key**
   Sign up, add `DAILY_API_KEY` to `server/.env`.
-- [ ] **Daily.co server service** — create `server/src/services/daily.ts`
-  `createDailyRoom(roomCode)` + `getDailyRoomToken(roomName, participantId)`.
-- [ ] **Daily.co proxy route** — create `server/src/routes/daily.ts`
-- [ ] **Wire Daily.co into room creation** — auto-create Daily room alongside game room.
+- [x] **Daily.co server service** — `server/src/services/daily.ts`
+  `createDailyRoom(roomCode)` + `getDailyRoomToken(roomName, participantId)`. Graceful no-op when unconfigured.
+- [x] **Daily.co proxy route** — `server/src/routes/daily.ts`
+- [x] **Wire Daily.co into room creation** — auto-creates Daily room alongside game room when API key present.
 
 - [ ] **Supabase project + credentials**
   Sign up, add `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` to `server/.env`.
 - [ ] **Run Supabase migrations** — sessions, profiles, snapshots, wrapped tables (SQL in ROADMAP.md).
-- [ ] **Create Supabase client** — `server/src/services/supabase.ts`
+- [x] **Create Supabase client** — `server/src/services/supabase.ts`
+  Full CRUD: createSession, endSession, saveProfile, saveSnapshot, saveWrapped. No-op when unconfigured.
 - [ ] **Integrate Supabase** — persist profiles, sessions, snapshots, wrapped cards.
 
 - [ ] **Upstash Redis database + credentials**
   Sign up, add `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` to `server/.env`.
-- [ ] **Create Redis client** — `server/src/services/redis.ts`
+- [x] **Create Redis client** — `server/src/services/redis.ts`
+  getRoom, setRoom, deleteRoom, touchRoom with 2h TTL. No-op when unconfigured.
 - [ ] **Migrate room store to Redis** — replace in-memory Map in `server/src/services/room.ts`, add 2h TTL.
 
 ---
@@ -104,3 +106,4 @@ No external dependencies. Needs audio asset files.
 |------|------|-------------|
 | 2026-03-13 | Created planning tracker | planning.md |
 | 2026-03-13 | Priority 0: All 6 quick fixes complete | planning.md, STATUS.md |
+| 2026-03-13 | Phase 1: External service layers built (Daily, Supabase, Redis) | planning.md |

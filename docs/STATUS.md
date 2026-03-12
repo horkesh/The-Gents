@@ -40,45 +40,17 @@ Tested end-to-end in Chrome:
 | 7 | Emoji reactions | ✅ Complete | 6 emojis, floating animations, real-time broadcast |
 | 8 | Group drink round | ✅ Complete | Keys triggers → Gemini cocktail → card modal → accept/dodge |
 | 9 | Confession round | ✅ Complete | Lorekeeper triggers → prompt → YES/NO vote → result + commentary |
-| 10 | Group snap | ⚠️ Partial | Countdown + capture works; compositing uses placeholder (first image) |
+| 10 | Group snap | ✅ Complete | Countdown + capture + Gemini composite (fallback: first image) |
 | 11 | Vibe shift | ✅ Complete | 3 modes with CSS filters, narration overlay, room state update |
 | 12 | Wrapped cards | ✅ Complete | Per-participant stats, Lorekeeper's Note, session title, share button |
 
-**Summary**: 9/12 fully implemented, 1 partial, 1 not started, 1 (video) blocked on external service.
+**Summary**: 10/12 fully implemented, 1 not started (video), 1 blocked on external service (Daily.co).
 
 ---
 
 ## Known Placeholders & Incomplete Logic
 
-### 1. Group Snap Photo Compositing
-**File**: `server/src/socket/party.ts` (UPLOAD_SNAP handler)
-**Issue**: When clients upload selfies after a group snap, the server currently uses the first uploaded image as the result instead of compositing all images via Gemini.
-**Fix needed**: Implement real Gemini composite generation using all uploaded selfies + current scene backdrop.
-
-### 2. Reaction Sender Name
-**File**: `server/src/socket/reactions.ts`
-**Issue**: `senderName` is broadcast as empty string `''` instead of the actual participant name.
-**Fix needed**: Look up sender's profile from room state by socket ID.
-
-### 3. Key Moments Tracking
-**File**: `server/src/socket/party.ts` (generateWrappedCards function)
-**Issue**: `keyMoments` array is always empty when generating Wrapped cards. Should track notable events (first drink, memorable confessions, etc.) throughout the session.
-**Fix needed**: Populate `keyMoments` during game mechanics.
-
-### 4. Landing Page Gent Role Selection
-**File**: `client/src/pages/Landing.tsx` (handleHost function, line 12)
-**Issue**: "HOST A PARTY" hardcodes `hostRole: 'keys'`. Should show role selection (Keys/Bass/Lorekeeper) before creating room.
-**Fix needed**: Add role selection UI before room creation.
-
-### 5. timesSpotlighted Stat
-**File**: `server/src/socket/party.ts`
-**Issue**: `timesSpotlighted` in `ParticipantStats` is never incremented. The spotlight mechanic is not implemented.
-**Fix needed**: Define what "spotlighted" means in gameplay and implement tracking.
-
-### 6. START_PARTY Lobby Handler
-**File**: `server/src/socket/lobby.ts`
-**Issue**: The lobby handler for START_PARTY has a comment "will be expanded in Phase 8" — the actual start logic lives in `party.ts` but lobby.ts has a stub.
-**Fix needed**: Consolidate or remove the duplicate handler.
+> All 6 original placeholders were fixed on 2026-03-13. No outstanding placeholders remain.
 
 ---
 

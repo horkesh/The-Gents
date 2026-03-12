@@ -44,3 +44,29 @@ The prototype in the repo was a single-player proof of concept. The real codebas
 - Install dependencies
 - Fix 6 known placeholders from STATUS.md
 - Deploy: client → Vercel, server → Fly.io
+
+---
+
+## 2026-03-13 — Session 6: Priority 0 Quick Fixes + Full Planning System
+
+### Context
+Created `docs/planning.md` as an active work tracker synthesizing ROADMAP + STATUS into ordered, checkboxed tasks. Then implemented all 6 known placeholder fixes.
+
+### Changes
+1. **Reaction sender name** — `reactions.ts` now looks up participant alias/name from room state by socket ID
+2. **START_PARTY lobby stub removed** — deleted duplicate handler from `lobby.ts`, real logic in `party.ts`
+3. **timesSpotlighted** — incremented for all participants who vote in confession rounds
+4. **Key moments tracking** — new `keyMoments` store in `party.ts`, populated during drinks, confessions, vibe shifts, snaps. Fed into Wrapped card generation
+5. **Landing role selection** — three-button picker (Alchemist/Atmosphere/Architect) replaces hardcoded `'keys'`
+6. **Group snap compositing** — new `gemini/composite.ts` service generates artistic composites via Gemini image model. Falls back to first image on failure
+7. **ACCEPT_DRINK/DODGE_DRINK** — now resolve participant alias/name instead of broadcasting socket ID
+
+### Files Modified
+- `server/src/socket/reactions.ts` — sender name resolution
+- `server/src/socket/lobby.ts` — removed START_PARTY stub
+- `server/src/socket/party.ts` — key moments, timesSpotlighted, compositing, name resolution
+- `server/src/services/gemini/composite.ts` — NEW: Gemini composite photo generation
+- `client/src/pages/Landing.tsx` — role selection UI
+- `docs/planning.md` — NEW: active work tracker
+- `docs/STATUS.md` — updated feature table and placeholders section
+- `docs/state-of-app.md` — will be updated after Phase completion

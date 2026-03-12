@@ -6,6 +6,7 @@ import { assembleContext } from '../services/gemini/context.js';
 import { generateCocktail } from '../services/gemini/cocktails.js';
 import { generateConfession, generateConfessionCommentary } from '../services/gemini/confessions.js';
 import { generateVibeNarration, generateWrappedNote, generateSessionTitle } from '../services/gemini/wrapped.js';
+import { generateComposite } from '../services/gemini/composite.js';
 import { logger } from '../utils/logger.js';
 
 type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -19,6 +20,16 @@ const confessionVotes = new Map<string, { question: string; votes: Map<string, b
 
 // Active snap uploads per room
 const snapUploads = new Map<string, Map<string, string>>();
+
+// Key moments per room (for Wrapped cards)
+const keyMoments = new Map<string, string[]>();
+
+function addKeyMoment(roomCode: string, moment: string) {
+  if (!keyMoments.has(roomCode)) {
+    keyMoments.set(roomCode, []);
+  }
+  keyMoments.get(roomCode)!.push(moment);
+}
 
 // Per-participant stats
 const participantStats = new Map<string, Map<string, {
@@ -139,6 +150,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
         stats.drinksReceived++;
       }
 
+      addKeyMoment(code, `"${cocktail.name}" was served to the room`);
       logger.info('party', `Drink "${cocktail.name}" sent to all in ${code}`);
     } catch (err) {
       logger.error('party', 'Failed to send group drink', err);
@@ -146,28 +158,36 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
   });
 
   // ─── ACCEPT / DODGE DRINK ─────────────────────
-  socket.on('ACCEPT_DRINK', ({ cocktailName }) => {
+  socket.on('ACCEPT_DRINK', async ({ cocktailName }) => {
     const code = getRoomCode(socket);
     if (!code) return;
+
+    const room = await getRoom(code);
+    const participant = room?.participants.find((p) => p.id === socket.id);
+    const displayName = participant?.alias || participant?.name || socket.id;
 
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksAccepted++;
 
     namespace.to(code).emit('DRINK_ACCEPTED', {
-      participantName: socket.id,
+      participantName: displayName,
       cocktailName,
     });
   });
 
-  socket.on('DODGE_DRINK', ({ cocktailName }) => {
+  socket.on('DODGE_DRINK', async ({ cocktailName }) => {
     const code = getRoomCode(socket);
     if (!code) return;
+
+    const room = await getRoom(code);
+    const participant = room?.participants.find((p) => p.id === socket.id);
+    const displayName = participant?.alias || participant?.name || socket.id;
 
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksDodged++;
 
     namespace.to(code).emit('DRINK_DODGED', {
-      participantName: socket.id,
+      participantName: displayName,
       cocktailName,
       commentary: 'Sent it back. Noted.',
     });
@@ -187,6 +207,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
 
       confessionVotes.set(code, { question, votes: new Map() });
       namespace.to(code).emit('CONFESSION_PROMPT', { question });
+      addKeyMoment(code, `Confession: "${question}"`);
       logger.info('party', `Confession triggered in ${code}: "${question}"`);
     } catch (err) {
       logger.error('party', 'Failed to trigger confession', err);
@@ -219,6 +240,12 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
         confession.question, yesCount, total, context
       );
 
+      // Increment timesSpotlighted for all participants who voted
+      for (const voterId of confession.votes.keys()) {
+        const voterStats = getOrCreateStats(code, voterId);
+        voterStats.timesSpotlighted++;
+      }
+
       namespace.to(code).emit('CONFESSION_RESULT', {
         question: confession.question,
         yesCount,
@@ -226,6 +253,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
         commentary,
       });
 
+      addKeyMoment(code, `Confession result: ${yesCount}/${total} said YES to "${confession.question}"`);
       confessionVotes.delete(code);
     }
   });
@@ -257,15 +285,38 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const stats = getOrCreateStats(code, socket.id);
     stats.snapsAppeared++;
 
-    // For now, just acknowledge the photo (composite generation would happen here)
-    // In full implementation, this would call Gemini to composite all selfies
-    if (uploads.size >= 1) {
-      // Use the first uploaded image as a placeholder for the composite
-      const firstImage = Array.from(uploads.values())[0];
-      namespace.to(code).emit('PHOTO_READY', {
-        imageUrl: `data:image/jpeg;base64,${firstImage}`,
-        act: 1,
-      });
+    // Check if all connected participants have uploaded
+    const room = await getRoom(code);
+    if (!room) return;
+
+    const connectedCount = room.participants.filter((p) => p.connected).length;
+    if (uploads.size >= connectedCount) {
+      const selfies = Array.from(uploads.values());
+
+      try {
+        const compositeBase64 = await generateComposite({
+          selfies,
+          sceneDescription: room.scene?.description || 'a cocktail party',
+          sceneBackdropBase64: room.scene?.backdropUrl?.replace('data:image/png;base64,', '') || '',
+        });
+
+        namespace.to(code).emit('PHOTO_READY', {
+          imageUrl: `data:image/png;base64,${compositeBase64}`,
+          act: room.act,
+        });
+
+        addKeyMoment(code, `Group snap taken during Act ${room.act}`);
+        logger.info('party', `Composite photo generated for ${code}`);
+      } catch (err) {
+        // Fallback: use first image as collage
+        logger.error('party', 'Composite generation failed, using fallback', err);
+        const firstImage = selfies[0];
+        namespace.to(code).emit('PHOTO_READY', {
+          imageUrl: `data:image/jpeg;base64,${firstImage}`,
+          act: room.act,
+        });
+      }
+
       snapUploads.delete(code);
     }
   });
@@ -285,6 +336,7 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
       room.vibe.energy = mode;
 
       namespace.to(code).emit('VIBE_CHANGED', { mode, narration });
+      addKeyMoment(code, `Vibe shifted from ${oldVibe} to ${mode}`);
       logger.info('party', `Vibe shifted to ${mode} in ${code}`);
     } catch (err) {
       logger.error('party', 'Failed to shift vibe', err);
@@ -305,11 +357,12 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
 
   for (const participant of room.participants) {
     const stats = getOrCreateStats(code, participant.id);
+    const roomKeyMoments = keyMoments.get(code) || [];
     const wrappedResult = await generateWrappedNote({
       alias: participant.alias || participant.name,
       traits: [...participant.traits].filter(Boolean),
       stats,
-      keyMoments: [],
+      keyMoments: roomKeyMoments,
     });
 
     // Send personalized wrapped card to each participant

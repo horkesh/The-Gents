@@ -1,6 +1,6 @@
 import type { Namespace, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
-import { joinRoom, leaveRoom, getRoom } from '../services/room.js';
+import { joinRoom, leaveRoom } from '../services/room.js';
 
 type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type PartyNamespace = Namespace<ClientToServerEvents, ServerToClientEvents>;
@@ -44,23 +44,6 @@ export function setupLobbyHandlers(namespace: PartyNamespace, socket: PartySocke
 
     socketRooms.delete(socket.id);
     socket.leave(code);
-  });
-
-  socket.on('START_PARTY', async () => {
-    const code = socketRooms.get(socket.id);
-    if (!code) return;
-
-    const room = await getRoom(code);
-    if (!room) return;
-
-    // Party start logic will be expanded in Phase 8
-    namespace.to(code).emit('PARTY_STARTED', {
-      scene: room.scene || {
-        description: 'The evening begins.',
-        backdropUrl: '',
-        location: 'Unknown',
-      },
-    });
   });
 
   socket.on('disconnect', () => {

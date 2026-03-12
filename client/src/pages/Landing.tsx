@@ -1,23 +1,29 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, slideUp } from '@/lib/animations';
+import type { GentRole } from '@the-toast/shared';
+
+const GENT_ROLES: { role: GentRole; title: string; icon: string; desc: string }[] = [
+  { role: 'keys', title: 'THE ALCHEMIST', icon: '🍸', desc: 'Cocktails & taste' },
+  { role: 'bass', title: 'THE ATMOSPHERE', icon: '🎵', desc: 'Mood & energy' },
+  { role: 'lorekeeper', title: 'THE ARCHITECT', icon: '📜', desc: 'Story & pacing' },
+];
 
 export function Landing() {
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
   const [showJoin, setShowJoin] = useState(false);
+  const [showRoleSelect, setShowRoleSelect] = useState(false);
 
-  const handleHost = async () => {
-    // TODO: Gent role selection → create room → redirect to lobby
-    // For now, create room as keys
+  const handleHostWithRole = async (role: GentRole) => {
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hostId: crypto.randomUUID(),
-          hostRole: 'keys',
+          hostRole: role,
         }),
       });
       const { code } = await res.json();
@@ -59,56 +65,84 @@ export function Landing() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          {!showJoin ? (
-            <>
-              <button
-                onClick={handleHost}
-                className="w-full py-4 bg-ember text-cream font-body font-bold rounded-lg
-                           hover:bg-ember-light active:bg-ember-dark transition-colors"
-              >
-                HOST A PARTY
-              </button>
-              <button
-                onClick={() => setShowJoin(true)}
-                className="w-full py-4 border border-gold/30 text-gold font-body font-bold rounded-lg
-                           hover:bg-gold/10 active:bg-gold/5 transition-colors"
-              >
-                JOIN A PARTY
-              </button>
-            </>
-          ) : (
-            <motion.div {...fadeIn} className="flex flex-col gap-4">
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 4))}
-                placeholder="ENTER CODE"
-                maxLength={4}
-                className="w-full py-4 px-6 bg-charcoal-light border border-gold/20 text-cream
-                           text-center font-body text-2xl tracking-[0.3em] rounded-lg
-                           placeholder:text-cream/20 focus:outline-none focus:border-gold/50"
-                autoFocus
-              />
-              <div className="flex gap-3">
+          <AnimatePresence mode="wait">
+            {!showJoin && !showRoleSelect ? (
+              <motion.div key="main" {...fadeIn} className="flex flex-col gap-4">
                 <button
-                  onClick={() => setShowJoin(false)}
-                  className="flex-1 py-3 border border-cream/10 text-cream/50 font-body rounded-lg
-                             hover:bg-cream/5 transition-colors"
+                  onClick={() => setShowRoleSelect(true)}
+                  className="w-full py-4 bg-ember text-cream font-body font-bold rounded-lg
+                             hover:bg-ember-light active:bg-ember-dark transition-colors"
+                >
+                  HOST A PARTY
+                </button>
+                <button
+                  onClick={() => setShowJoin(true)}
+                  className="w-full py-4 border border-gold/30 text-gold font-body font-bold rounded-lg
+                             hover:bg-gold/10 active:bg-gold/5 transition-colors"
+                >
+                  JOIN A PARTY
+                </button>
+              </motion.div>
+            ) : showRoleSelect ? (
+              <motion.div key="roles" {...fadeIn} className="flex flex-col gap-3">
+                <p className="label text-cream/50 text-center mb-1">CHOOSE YOUR ROLE</p>
+                {GENT_ROLES.map(({ role, title, icon, desc }) => (
+                  <button
+                    key={role}
+                    onClick={() => handleHostWithRole(role)}
+                    className="w-full py-3 px-4 border border-gold/20 text-cream font-body rounded-lg
+                               hover:bg-gold/10 hover:border-gold/40 active:bg-gold/5 transition-colors
+                               flex items-center gap-3"
+                  >
+                    <span className="text-2xl">{icon}</span>
+                    <div className="text-left">
+                      <div className="font-bold text-gold text-sm">{title}</div>
+                      <div className="text-cream/40 text-xs">{desc}</div>
+                    </div>
+                  </button>
+                ))}
+                <button
+                  onClick={() => setShowRoleSelect(false)}
+                  className="w-full py-3 border border-cream/10 text-cream/50 font-body rounded-lg
+                             hover:bg-cream/5 transition-colors mt-1"
                 >
                   BACK
                 </button>
-                <button
-                  onClick={handleJoin}
-                  disabled={joinCode.length !== 4}
-                  className="flex-1 py-3 bg-teal text-cream font-body font-bold rounded-lg
-                             hover:bg-teal-light disabled:opacity-30 disabled:cursor-not-allowed
-                             transition-colors"
-                >
-                  JOIN
-                </button>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            ) : (
+              <motion.div key="join" {...fadeIn} className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 4))}
+                  placeholder="ENTER CODE"
+                  maxLength={4}
+                  className="w-full py-4 px-6 bg-charcoal-light border border-gold/20 text-cream
+                             text-center font-body text-2xl tracking-[0.3em] rounded-lg
+                             placeholder:text-cream/20 focus:outline-none focus:border-gold/50"
+                  autoFocus
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowJoin(false)}
+                    className="flex-1 py-3 border border-cream/10 text-cream/50 font-body rounded-lg
+                               hover:bg-cream/5 transition-colors"
+                  >
+                    BACK
+                  </button>
+                  <button
+                    onClick={handleJoin}
+                    disabled={joinCode.length !== 4}
+                    className="flex-1 py-3 bg-teal text-cream font-body font-bold rounded-lg
+                               hover:bg-teal-light disabled:opacity-30 disabled:cursor-not-allowed
+                               transition-colors"
+                  >
+                    JOIN
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Footer */}

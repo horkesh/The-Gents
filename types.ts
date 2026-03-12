@@ -74,9 +74,3 @@ export interface GameState {
   isLoading: boolean;
   loadingMessage: string;
 }
-
-export const INITIAL_SCENE: Scene = {
-  title: "The Lobby",
-  description: "A waiting room of velvet and anticipation.",
-  imageUrl: "https://images.unsplash.com/photo-1514362545857-3bc16549766b?q=80&w=1920&auto=format&fit=crop"
-};

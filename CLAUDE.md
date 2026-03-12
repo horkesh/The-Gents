@@ -43,6 +43,13 @@ npx tsc --noEmit  # Type check
 - `GEMINI_API_KEY` in `.env.local` (loaded via Vite `define` in `vite.config.ts` as `process.env.API_KEY`)
 - Never commit `.env.local` or API keys
 
+## Deployment
+
+- **Vercel** (free tier, push-to-deploy from `main`)
+- `vercel.json` configures Vite framework, SPA rewrites
+- Set `GEMINI_API_KEY` in Vercel dashboard → Project Settings → Environment Variables
+- GitHub repo: https://github.com/horkesh/The-Gents
+
 ## Conventions
 
 ### State Management

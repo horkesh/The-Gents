@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DailyProvider } from '@daily-co/daily-react';
-import DailyIframe from '@daily-co/daily-js';
+import DailyIframe, { type DailyCall } from '@daily-co/daily-js';
 import { useRoomContext } from '@/contexts/RoomContext';
 import { usePartyContext } from '@/contexts/PartyContext';
 import { useSocketContext } from '@/contexts/SocketContext';
@@ -18,6 +18,7 @@ import { VibeShiftOverlay } from '@/components/mechanics/VibeShift';
 import { GentControlPanel } from '@/components/layout/GentControlPanel';
 import { VideoGrid } from '@/components/video/VideoGrid';
 import { VideoControls } from '@/components/video/VideoControls';
+import { ParticipantTile } from '@/components/video/ParticipantTile';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { fadeIn } from '@/lib/animations';
 import type { ParticipantProfile } from '@the-toast/shared';
@@ -31,9 +32,16 @@ export function Party() {
   const [selectedProfile, setSelectedProfile] = useState<ParticipantProfile | null>(null);
 
   const dailyRoomUrl = room?.dailyRoomUrl || '';
-  const callObject = useMemo(() => {
-    if (!dailyRoomUrl) return null;
-    return DailyIframe.createCallObject({ url: dailyRoomUrl });
+  const [callObject, setCallObject] = useState<DailyCall | null>(null);
+
+  useEffect(() => {
+    if (!dailyRoomUrl) return;
+    const co = DailyIframe.createCallObject({ url: dailyRoomUrl });
+    setCallObject(co);
+    return () => {
+      co.destroy();
+      setCallObject(null);
+    };
   }, [dailyRoomUrl]);
 
   useEffect(() => {
@@ -45,11 +53,10 @@ export function Party() {
     }
   }, [code, joinRoom]);
 
-  // Join/leave Daily.co call
+  // Join Daily.co call (leave/destroy handled by callObject creation effect)
   useEffect(() => {
     if (!callObject || !dailyRoomUrl) return;
     callObject.join({ url: dailyRoomUrl });
-    return () => { callObject.leave(); };
   }, [callObject, dailyRoomUrl]);
 
   useEffect(() => {
@@ -83,43 +90,23 @@ export function Party() {
           />
         ) : (
           <div className="flex-1 flex flex-col justify-center px-4 py-4">
-            {/* Static avatar fallback when no video */}
             <div className="flex justify-center gap-3 mb-4">
               {gents.map((gent) => (
-                <motion.div key={gent.id} whileTap={{ scale: 0.95 }}>
-                  <div
-                    className="w-20 h-24 rounded-xl overflow-hidden border-2 border-gold/40 bg-charcoal-light cursor-pointer"
-                    onClick={() => setSelectedProfile(gent)}
-                  >
-                    {(gent.portraitUrl || gent.photoUrl) ? (
-                      <img src={gent.portraitUrl || gent.photoUrl} alt={gent.alias || gent.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-cream/20 text-lg">{gent.name.charAt(0)}</div>
-                    )}
-                  </div>
-                  <p className="text-[0.5rem] text-gold/60 tracking-wider uppercase text-center mt-1 truncate max-w-20">
-                    {gent.alias || gent.name}
-                  </p>
-                </motion.div>
+                <ParticipantTile
+                  key={gent.id}
+                  profile={gent}
+                  isGent
+                  onClick={() => setSelectedProfile(gent)}
+                />
               ))}
             </div>
             <div className="flex flex-wrap justify-center gap-3">
               {guests.map((guest) => (
-                <motion.div key={guest.id} whileTap={{ scale: 0.95 }}>
-                  <div
-                    className={`w-16 h-20 rounded-lg overflow-hidden border bg-charcoal-light cursor-pointer ${guest.connected ? 'border-cream/10' : 'border-cream/5 opacity-40 grayscale'}`}
-                    onClick={() => setSelectedProfile(guest)}
-                  >
-                    {(guest.portraitUrl || guest.photoUrl) ? (
-                      <img src={guest.portraitUrl || guest.photoUrl} alt={guest.alias || guest.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-cream/20">{guest.name.charAt(0)}</div>
-                    )}
-                  </div>
-                  <p className="text-[0.45rem] text-cream/30 tracking-wider uppercase text-center mt-1 truncate max-w-16">
-                    {guest.alias || guest.name}
-                  </p>
-                </motion.div>
+                <ParticipantTile
+                  key={guest.id}
+                  profile={guest}
+                  onClick={() => setSelectedProfile(guest)}
+                />
               ))}
             </div>
           </div>

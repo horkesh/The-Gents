@@ -1,6 +1,6 @@
 import { useVideoTrack, useAudioTrack } from '@daily-co/daily-react';
-import { motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
+import { ParticipantTile } from './ParticipantTile';
 import type { ParticipantProfile } from '@the-toast/shared';
 
 interface VideoTileProps {
@@ -9,7 +9,6 @@ interface VideoTileProps {
   isGent?: boolean;
   isActiveSpeaker?: boolean;
   onClick?: () => void;
-  key?: React.Key;
 }
 
 export function VideoTile({
@@ -37,46 +36,27 @@ export function VideoTile({
   }, [audioTrack?.persistentTrack]);
 
   const hasVideo = videoTrack?.state === 'playable';
-  const size = isGent ? 'w-20 h-24' : 'w-16 h-20';
-  const borderColor = isActiveSpeaker
-    ? 'border-gold ring-2 ring-gold/40'
-    : isGent
-      ? 'border-gold/40'
-      : profile.connected
-        ? 'border-cream/10'
-        : 'border-cream/5 opacity-40 grayscale';
+
+  const videoSlot = hasVideo ? (
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      className="w-full h-full object-cover mirror"
+    />
+  ) : undefined;
 
   return (
-    <motion.div whileTap={{ scale: 0.95 }}>
-      <div
-        className={`${size} rounded-${isGent ? 'xl' : 'lg'} overflow-hidden border-2 ${borderColor} bg-charcoal-light cursor-pointer relative`}
+    <>
+      <ParticipantTile
+        profile={profile}
+        isGent={isGent}
+        isActiveSpeaker={isActiveSpeaker}
         onClick={onClick}
-      >
-        {hasVideo ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover mirror"
-          />
-        ) : (profile.portraitUrl || profile.photoUrl) ? (
-          <img
-            src={profile.portraitUrl || profile.photoUrl}
-            alt={profile.alias || profile.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-cream/20 text-lg">
-            {profile.name.charAt(0)}
-          </div>
-        )}
-      </div>
-      <p className={`text-${isGent ? '[0.5rem]' : '[0.45rem]'} text-${isGent ? 'gold/60' : 'cream/30'} tracking-wider uppercase text-center mt-1 truncate max-w-${isGent ? '20' : '16'}`}>
-        {profile.alias || profile.name}
-      </p>
-      {/* Hidden audio element for remote participants */}
-      <audio ref={audioRef} autoPlay playsInline />
-    </motion.div>
+        videoSlot={videoSlot}
+      />
+      <audio ref={audioRef} autoPlay playsInline className="hidden" />
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useCallback, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useCallback, useState, useMemo, type ReactNode } from 'react';
 import { audioManager, type SfxName } from '@/lib/audio';
 import { usePartyContext } from './PartyContext';
 
@@ -30,8 +30,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('touchstart', handleInteraction);
     };
-    window.addEventListener('click', handleInteraction, { once: true });
-    window.addEventListener('touchstart', handleInteraction, { once: true });
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
     return () => {
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('touchstart', handleInteraction);
@@ -59,16 +59,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     audioManager.playSfx(name);
   }, []);
 
-  const setVolume = useCallback((v: number) => {
-    setVolumeState(v);
-  }, []);
-
   const toggleMute = useCallback(() => {
     setMuted((prev) => !prev);
   }, []);
 
+  const value = useMemo(
+    () => ({ playSfx, volume, setVolume: setVolumeState, muted, toggleMute }),
+    [playSfx, volume, muted, toggleMute],
+  );
+
   return (
-    <AudioCtx.Provider value={{ playSfx, volume, setVolume, muted, toggleMute }}>
+    <AudioCtx.Provider value={value}>
       {children}
     </AudioCtx.Provider>
   );

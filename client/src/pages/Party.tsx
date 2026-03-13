@@ -40,7 +40,6 @@ export function Party() {
     setCallObject(co);
     return () => {
       co.destroy();
-      setCallObject(null);
     };
   }, [dailyRoomUrl]);
 

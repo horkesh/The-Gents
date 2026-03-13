@@ -24,15 +24,19 @@ export function VideoTile({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    if (videoTrack?.persistentTrack && videoRef.current) {
-      videoRef.current.srcObject = new MediaStream([videoTrack.persistentTrack]);
+    const el = videoRef.current;
+    if (videoTrack?.persistentTrack && el) {
+      el.srcObject = new MediaStream([videoTrack.persistentTrack]);
     }
+    return () => { if (el) el.srcObject = null; };
   }, [videoTrack?.persistentTrack]);
 
   useEffect(() => {
-    if (audioTrack?.persistentTrack && audioRef.current) {
-      audioRef.current.srcObject = new MediaStream([audioTrack.persistentTrack]);
+    const el = audioRef.current;
+    if (audioTrack?.persistentTrack && el) {
+      el.srcObject = new MediaStream([audioTrack.persistentTrack]);
     }
+    return () => { if (el) el.srcObject = null; };
   }, [audioTrack?.persistentTrack]);
 
   const hasVideo = videoTrack?.state === 'playable';

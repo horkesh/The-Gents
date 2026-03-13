@@ -131,6 +131,7 @@ class AudioManager {
     gain.gain.value = 0.7;
     source.connect(gain);
     gain.connect(this.masterGain);
+    source.onended = () => { source.disconnect(); gain.disconnect(); };
     source.start();
   }
 

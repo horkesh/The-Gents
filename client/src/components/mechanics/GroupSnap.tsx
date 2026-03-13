@@ -30,11 +30,12 @@ export function GroupSnap() {
       socket.off('SNAP_COUNTDOWN');
       socket.off('PHOTO_READY');
     };
-  }, [socket]);
+  }, [socket, playSfx]);
 
   const captureAndUpload = async () => {
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: 640, height: 640 },
       });
       const video = document.createElement('video');
@@ -51,10 +52,11 @@ export function GroupSnap() {
         const base64 = dataUrl.split(',')[1];
         socket?.emit('UPLOAD_SNAP', { imageData: base64 });
       }
-
-      stream.getTracks().forEach((t) => t.stop());
+      video.srcObject = null;
     } catch {
       // Camera not available — skip
+    } finally {
+      stream?.getTracks().forEach((t) => t.stop());
     }
   };
 

@@ -36,19 +36,21 @@ export function ConfessionRound() {
       const t = setTimeout(() => setPhase('voting'), 2000);
       return () => clearTimeout(t);
     }
-  }, [activeConfession?.question]);
+  }, [activeConfession?.question, playSfx]);
 
   // Voting countdown
   useEffect(() => {
     if (phase !== 'voting') return;
-    if (timer <= 0) return;
 
     const interval = setInterval(() => {
-      setTimer((t) => t - 1);
+      setTimer((t) => {
+        if (t <= 1) { clearInterval(interval); return 0; }
+        return t - 1;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [phase, timer]);
+  }, [phase]);
 
   // Listen for result
   useEffect(() => {

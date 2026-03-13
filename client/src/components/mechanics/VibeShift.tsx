@@ -35,7 +35,7 @@ export function VibeShiftOverlay() {
     return () => {
       socket.off('VIBE_CHANGED');
     };
-  }, [socket]);
+  }, [socket, playSfx]);
 
   return (
     <>

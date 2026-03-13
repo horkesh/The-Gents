@@ -114,3 +114,46 @@ Created `docs/planning.md` as an active work tracker synthesizing ROADMAP + STAT
 - `fly.toml` — Fly.io config with WebSocket support, auto-scale
 - `client/vercel.json` — Vite framework, monorepo build, SPA rewrites
 - `.dockerignore` — Excludes client, docs, node_modules from Docker context
+
+---
+
+## 2026-03-13 — Session 7: Elevation Features (10 of 12)
+
+### Context
+Implemented all 10 actionable elevation features from `docs/ELEVATE-PLAN.md`. Features 11-12 deferred (require Supabase + email infrastructure).
+
+### Changes — Shared Types & Constants
+- `shared/src/types/events.ts` — Added 8 new socket events: GUEST_ENTRANCE, TRIGGER_SPOTLIGHT, SPOTLIGHT, TRIGGER_TOAST, TOAST_SPEECH, TOAST_SNAP, TOAST_PHOTO_READY, GUEST_BOOK_OPEN, SUBMIT_GUEST_BOOK. Extended CONFESSION_VOTE (boolean|null), CONFESSION_RESULT (+noCount, mysteryCount), DRINK_SENT (+dedicatedTo), SEND_GROUP_DRINK (+dedicatedTo), WRAPPED_READY (+guestBookEntries, mostAlignedWith, totalGuests)
+- `shared/src/types/room.ts` — Added arrivalOrder, cocktailsAccepted, cocktailsDodged to ParticipantStats. Added theme to RoomState
+- `shared/src/types/gemini.ts` — Extended WrappedGenerationRequest stats with new fields
+- `shared/src/constants/themes.ts` — NEW: 6 scene themes (classic, havana, amalfi, tokyo, marrakech, stockholm) with per-act scene pools, cocktail style, and accent colors
+
+### Changes — Server
+- `server/src/socket/party.ts` — Added handlers for TRIGGER_SPOTLIGHT, SUBMIT_GUEST_BOOK, TRIGGER_TOAST, SEND_GROUP_DRINK (with dedications). Added vote/drink tracking for compatibility. Pre-computed compatibility scores with parallel quip generation
+- `server/src/socket/lobby.ts` — Added arrival order tracking, GUEST_ENTRANCE event emission
+- `server/src/services/gemini/social.ts` — NEW: generateEntranceIntro, generateSpotlightRoast, generateCompatibilityQuip, generateToastSpeech
+- `server/src/services/gemini/prompts.ts` — Added ENTRANCE_INTRO_PROMPT, SPOTLIGHT_ROAST_PROMPT, COMPATIBILITY_QUIP_PROMPT, TOAST_SPEECH_PROMPT
+- `server/src/services/gemini/confessions.ts` — Extended commentary to reference mystery voters
+- `server/src/services/gemini/wrapped.ts` — Drink stats narrative (cocktail names in Lorekeeper's Note)
+- `server/src/services/room.ts` — Theme parameter in createRoom
+- `server/src/routes/rooms.ts` — Theme in POST /rooms
+
+### Changes — Client
+- `client/src/components/party/GuestEntrance.tsx` — NEW: cinematic arrival overlay with portrait + AI intro
+- `client/src/components/mechanics/Spotlight.tsx` — NEW: full-screen spotlight with gold glow + AI roast
+- `client/src/components/mechanics/GuestBook.tsx` — NEW: floating text input for anonymous entries
+- `client/src/components/mechanics/TheToast.tsx` — NEW: synchronized speech → countdown → snap → photo reveal
+- `client/src/components/mechanics/ConfessionRound.tsx` — "I'll Never Tell" third vote option, mystery count display
+- `client/src/components/mechanics/DrinkRound.tsx` — Dedication badge on drink cards
+- `client/src/components/gent/LorekeeperPanel.tsx` — Spotlight controls per guest (30s cooldown), Toast button (Act III+, once)
+- `client/src/components/gent/KeysPanel.tsx` — Dedication guest selector before mixing
+- `client/src/contexts/PartyContext.tsx` — Added activeEntrance, activeSpotlight, guestBookOpen state with timer ref cleanup
+- `client/src/pages/Party.tsx` — Renders new components (GuestEntrance, Spotlight, GuestBook, TheToast)
+- `client/src/pages/Wrapped.tsx` — Arrival order easter egg, compatibility "YOUR MATCH" section, guest book entries section
+- `client/src/pages/Landing.tsx` — Theme picker after role selection (6 themed cards)
+
+### Simplify Pass
+- Fixed setTimeout leaks in PartyContext (entrance/spotlight auto-clear) with refs + cleanup on unmount
+- Fixed setTimeout leak in TheToast photo auto-clear
+- Moved generateEntranceIntro from inline lobby.ts to social.ts service
+- Pre-computed compatibility scores once + parallelized quip generation in wrapped cards

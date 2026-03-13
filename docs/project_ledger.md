@@ -98,3 +98,19 @@ Created `docs/planning.md` as an active work tracker synthesizing ROADMAP + STAT
 - `client/src/components/mechanics/DrinkRound.tsx` — pour SFX on appear, clink on accept
 - `client/src/components/mechanics/ConfessionRound.tsx` — envelope SFX on prompt
 - `client/src/components/mechanics/GroupSnap.tsx` — shutter SFX on snap
+
+### Phase 4: Polish & Error Handling
+- `client/src/components/ui/ErrorBoundary.tsx` — Class component with retry button
+- `client/src/components/ui/ConnectionStatus.tsx` — Reconnecting banner on disconnect
+- `client/src/contexts/SocketContext.tsx` — Reconnection with backoff (1s→10s, 10 attempts), auto room rejoin
+- `client/src/contexts/RoomContext.tsx` — Store/clear roomCode in sessionStorage, memoized context
+- `client/src/lib/storage.ts` — Centralized storage keys + safe getStoredProfile()
+- `client/src/styles/globals.css` — Focus rings, prefers-reduced-motion, 16px inputs, mirror class
+- `client/src/components/ui/Button.tsx` — 44px min touch targets
+- `client/src/components/mechanics/ReactionBar.tsx` — ARIA labels
+
+### Phase 5: Deployment
+- `server/Dockerfile` — Multi-stage Node 20 + pnpm build (shared+server → production)
+- `fly.toml` — Fly.io config with WebSocket support, auto-scale
+- `client/vercel.json` — Vite framework, monorepo build, SPA rewrites
+- `.dockerignore` — Excludes client, docs, node_modules from Docker context

@@ -93,9 +93,11 @@ No external dependencies. Needs audio asset files.
 
 ## Phase 5: Deployment
 
-- [ ] **Server Dockerfile** — `server/Dockerfile` (Node 20, pnpm, build shared+server).
-- [ ] **Deploy server to Fly.io** — `fly launch` + `fly secrets set`.
-- [ ] **Configure Vercel for client** — Vite framework, `VITE_API_URL` env var, SPA fallback.
+- [x] **Server Dockerfile** — `server/Dockerfile` (Node 20, pnpm, multi-stage build, shared+server).
+- [x] **Fly.io config** — `fly.toml` at repo root with WebSocket-friendly settings.
+- [x] **Configure Vercel for client** — `client/vercel.json` with SPA rewrites, monorepo build command.
+- [ ] **Deploy server to Fly.io** — `fly launch` + `fly secrets set` (requires Fly.io account).
+- [ ] **Deploy client to Vercel** — import project + set `VITE_API_URL` (requires Vercel account).
 - [ ] **DNS + SSL** — custom domains on both, update `CLIENT_URL` on server.
 
 ---
@@ -110,3 +112,4 @@ No external dependencies. Needs audio asset files.
 | 2026-03-13 | Phase 2: Video components (VideoGrid, VideoTile, VideoControls) + DailyProvider | planning.md |
 | 2026-03-13 | Phase 3: Audio system (AudioManager, AudioProvider, SFX wiring) | planning.md |
 | 2026-03-13 | Phase 4: Error boundary, socket reconnection, mobile/a11y polish | planning.md |
+| 2026-03-13 | Phase 5: Deployment configs (Dockerfile, fly.toml, vercel.json) | planning.md |

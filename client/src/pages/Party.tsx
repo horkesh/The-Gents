@@ -93,7 +93,7 @@ export function Party() {
           />
         ) : (
           <div className="flex-1 flex flex-col justify-center px-4 py-4">
-            <div className="flex justify-center gap-3 mb-4">
+            <div className="flex justify-center gap-3.5 mb-5">
               {gents.map((gent) => (
                 <ParticipantTile
                   key={gent.id}
@@ -134,7 +134,7 @@ export function Party() {
 
       <AnimatePresence>
         {selectedProfile && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/70 backdrop-blur-sm px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedProfile(null)}>
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/80 backdrop-blur-md px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedProfile(null)}>
             <ProfileCard profile={selectedProfile} onClose={() => setSelectedProfile(null)} />
           </motion.div>
         )}

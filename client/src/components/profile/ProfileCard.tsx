@@ -21,7 +21,7 @@ export function ProfileCard({ profile, onClose }: ProfileCardProps) {
   return (
     <motion.div
       {...scaleReveal}
-      className="bg-charcoal-light rounded-2xl border border-gold/10 overflow-hidden max-w-xs w-full"
+      className="glass-strong rounded-2xl overflow-hidden max-w-xs w-full gradient-border shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5)]"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Portrait */}
@@ -44,7 +44,7 @@ export function ProfileCard({ profile, onClose }: ProfileCardProps) {
           </div>
         )}
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal-light via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/20 to-transparent" />
 
         {/* Name overlay */}
         <div className="absolute bottom-4 left-4 right-4">
@@ -72,7 +72,7 @@ export function ProfileCard({ profile, onClose }: ProfileCardProps) {
             {profile.traits.filter(Boolean).map((trait, i) => (
               <span
                 key={i}
-                className="text-[0.65rem] tracking-wide uppercase text-gold/60 bg-gold/5 px-2 py-1 rounded"
+                className="text-[0.65rem] tracking-wide uppercase text-gold/60 bg-gold/8 px-2.5 py-1 rounded-md border border-gold/10"
               >
                 {trait}
               </span>
@@ -92,7 +92,7 @@ export function ProfileCard({ profile, onClose }: ProfileCardProps) {
       {onClose && (
         <button
           onClick={onClose}
-          className="w-full py-3 text-cream/30 text-sm font-body hover:text-cream/50 transition-colors border-t border-cream/5"
+          className="w-full py-3 text-cream/30 text-sm font-body hover:text-cream/50 transition-all duration-200 border-t border-cream/5"
         >
           Close
         </button>

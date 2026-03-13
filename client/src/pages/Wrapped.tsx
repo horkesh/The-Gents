@@ -53,34 +53,50 @@ export function Wrapped() {
 
   if (!data) {
     return (
-      <motion.div {...fadeIn} className="min-h-dvh flex flex-col items-center justify-center px-6 bg-charcoal">
-        <img src="/logo/01_Gold_logo.png" alt="The Gents" className="w-20 h-20 mb-6" />
-        <p className="heading-display-italic text-gold/50 text-lg">
-          The evening wraps up...
-        </p>
-        <p className="label text-cream/20 mt-4">Session {code}</p>
+      <motion.div {...fadeIn} className="noise-overlay min-h-dvh flex flex-col items-center justify-center px-6 relative overflow-hidden">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/3 blur-[120px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="relative">
+            <div className="absolute inset-0 w-20 h-20 rounded-full bg-gold/10 blur-2xl" />
+            <img src="/logo/01_Gold_logo.png" alt="The Gents" className="w-20 h-20 relative drop-shadow-[0_0_20px_rgba(201,168,76,0.2)]" />
+          </div>
+          <p className="heading-display-italic text-gold/50 text-lg mt-6">
+            The evening wraps up...
+          </p>
+          <p className="label text-cream/20 mt-4">Session {code}</p>
+        </div>
       </motion.div>
     );
   }
 
   return (
-    <motion.div {...fadeIn} className="min-h-dvh bg-charcoal px-6 py-8">
-      <div className="max-w-sm mx-auto">
+    <motion.div {...fadeIn} className="noise-overlay min-h-dvh px-6 py-8 relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/3 blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full bg-ember/5 blur-[100px] pointer-events-none" />
+
+      <div className="max-w-sm mx-auto relative z-10">
         {/* Header */}
         <motion.div className="text-center mb-8" {...slideUp}>
-          <img src="/logo/01_Gold_logo.png" alt="The Gents" className="w-14 h-14 mx-auto mb-4" />
-          <h1 className="heading-display text-xl text-gold mb-1">{data.sessionTitle}</h1>
+          <div className="relative inline-block">
+            <div className="absolute inset-0 w-14 h-14 rounded-full bg-gold/10 blur-xl" />
+            <img src="/logo/01_Gold_logo.png" alt="The Gents" className="w-14 h-14 mx-auto mb-4 relative drop-shadow-[0_0_12px_rgba(201,168,76,0.2)]" />
+          </div>
+          <h1 className="heading-display text-xl gold-shimmer mb-1">{data.sessionTitle}</h1>
           <p className="label text-cream/30">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
         </motion.div>
 
         {/* Portrait */}
         <motion.div className="flex flex-col items-center mb-8" {...scaleReveal}>
-          <div className="w-36 h-36 rounded-full border-2 border-gold overflow-hidden mb-4 shadow-[0_0_20px_rgba(201,168,76,0.2)]">
-            <img
-              src={data.profile.portraitUrl || data.profile.photoUrl}
-              alt={data.profile.alias}
-              className="w-full h-full object-cover"
-            />
+          <div className="relative">
+            <div className="absolute inset-0 w-36 h-36 rounded-full bg-gold/8 blur-2xl" />
+            <div className="w-36 h-36 rounded-full border-2 border-gold overflow-hidden mb-4 shadow-[0_0_30px_rgba(201,168,76,0.2)] relative">
+              <img
+                src={data.profile.portraitUrl || data.profile.photoUrl}
+                alt={data.profile.alias}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
           <h2 className="heading-display text-2xl text-cream">{data.profile.alias}</h2>
           <p className="text-cream/30 text-sm font-body">{data.profile.name}</p>
@@ -111,7 +127,7 @@ export function Wrapped() {
 
         {/* Lorekeeper's Note */}
         <motion.div
-          className="bg-charcoal-light rounded-xl border border-gold/10 p-6 mb-8 text-center"
+          className="glass-strong rounded-2xl p-6 mb-8 text-center ambient-glow gradient-border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
@@ -125,14 +141,14 @@ export function Wrapped() {
         {/* Compatibility */}
         {data.mostAlignedWith && (
           <motion.div
-            className="bg-charcoal-light rounded-xl border border-gold/10 p-6 mb-8 text-center"
+            className="glass-strong rounded-2xl p-6 mb-8 text-center gradient-border"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
           >
             <p className="label text-gold/40 mb-3">YOUR MATCH</p>
             <p className="heading-display text-xl text-cream mb-1">{data.mostAlignedWith.alias}</p>
-            <p className="text-gold text-2xl font-body mb-2">{data.mostAlignedWith.matchScore}%</p>
+            <p className="text-gold text-2xl font-body font-bold mb-2">{data.mostAlignedWith.matchScore}%</p>
             <p className="heading-display-italic text-cream/50 text-sm">
               "{data.mostAlignedWith.quip}"
             </p>
@@ -142,7 +158,7 @@ export function Wrapped() {
         {/* Guest Book */}
         {data.guestBookEntries.length > 0 && (
           <motion.div
-            className="bg-charcoal-light rounded-xl border border-cream/5 p-6 mb-8"
+            className="glass rounded-2xl p-6 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
@@ -166,14 +182,14 @@ export function Wrapped() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.0 }}
           >
-            <p className="label text-cream/30 mb-3">Moments</p>
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <p className="label text-cream/30 mb-3 text-center">Moments</p>
+            <div className="flex gap-2.5 overflow-x-auto pb-2">
               {data.photos.map((url, i) => (
                 <img
                   key={i}
                   src={url}
                   alt={`Moment ${i + 1}`}
-                  className="w-24 h-24 rounded-lg object-cover flex-shrink-0 border border-cream/5"
+                  className="w-24 h-24 rounded-xl object-cover flex-shrink-0 border border-gold/8 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                 />
               ))}
             </div>
@@ -192,9 +208,12 @@ export function Wrapped() {
         </motion.div>
 
         {/* Footer */}
-        <p className="label text-cream/10 text-center mt-8">
-          @the.gents.chronicles
-        </p>
+        <div className="flex flex-col items-center gap-2 mt-8">
+          <div className="w-8 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          <p className="label text-cream/10">
+            @the.gents.chronicles
+          </p>
+        </div>
       </div>
     </motion.div>
   );
@@ -209,7 +228,7 @@ function arrivalOrderText(order: number, total: number): string {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-charcoal-light rounded-lg border border-cream/5 p-3 text-center">
+    <div className="glass rounded-xl p-3.5 text-center">
       <p className="heading-display text-2xl text-gold">{value}</p>
       <p className="label text-cream/20 mt-1" style={{ fontSize: '0.5rem' }}>{label}</p>
     </div>

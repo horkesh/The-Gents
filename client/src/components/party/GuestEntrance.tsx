@@ -20,7 +20,7 @@ export function GuestEntrance() {
           >
             {activeEntrance.profile.portraitUrl || activeEntrance.profile.photoUrl ? (
               <motion.div
-                className="w-24 h-24 rounded-full border-2 border-gold overflow-hidden mb-3 shadow-[0_0_20px_rgba(201,168,76,0.3)]"
+                className="w-24 h-24 rounded-full border-2 border-gold overflow-hidden mb-3 shadow-[0_0_30px_rgba(201,168,76,0.3)]"
                 initial={{ y: 40, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -34,7 +34,7 @@ export function GuestEntrance() {
             ) : null}
 
             <motion.h3
-              className="heading-display text-lg text-gold mb-1"
+              className="heading-display text-lg gold-shimmer mb-1"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}

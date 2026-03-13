@@ -27,15 +27,15 @@ export function ActTimer() {
   const seconds = Math.floor((remaining % 60000) / 1000);
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="label text-cream/20">{actDef.name}</span>
+    <div className="flex items-center gap-3 bg-charcoal-light/60 rounded-xl px-4 py-2.5 border border-cream/5">
+      <span className="label text-cream/25">{actDef.name}</span>
       <div className="flex-1 h-0.5 bg-cream/5 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gold/30 rounded-full transition-all duration-1000"
+          className="h-full bg-gradient-to-r from-gold/40 to-gold/20 rounded-full transition-all duration-1000"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
-      <span className="text-cream/20 text-xs font-body tabular-nums">
+      <span className="text-cream/25 text-xs font-body tabular-nums">
         {minutes}:{seconds.toString().padStart(2, '0')}
       </span>
     </div>

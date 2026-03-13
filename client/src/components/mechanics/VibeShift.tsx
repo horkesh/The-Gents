@@ -55,7 +55,7 @@ export function VibeShiftOverlay() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.8 }}
           >
-            <p className="heading-display-italic text-lg text-cream/70">
+            <p className="heading-display-italic text-lg text-cream/70 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
               {narration}
             </p>
           </motion.div>

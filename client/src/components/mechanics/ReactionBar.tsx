@@ -16,11 +16,13 @@ export function ReactionBar() {
           key={emoji}
           onClick={() => sendReaction(emoji)}
           whileTap={{ scale: 1.4 }}
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           aria-label={`Send ${emoji} reaction`}
           className="w-11 h-11 flex items-center justify-center text-xl
-                     rounded-full bg-charcoal-light/80 backdrop-blur-sm
-                     border border-cream/5 hover:border-cream/20
-                     active:bg-cream/10 transition-colors"
+                     rounded-full glass
+                     hover:border-cream/15 hover:bg-cream/5
+                     active:bg-cream/10 transition-all duration-200"
         >
           {emoji}
         </motion.button>

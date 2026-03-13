@@ -6,10 +6,10 @@ interface BadgeProps {
 }
 
 const variants = {
-  gold: 'bg-gold/20 text-gold border-gold/30',
-  ember: 'bg-ember/20 text-ember-light border-ember/30',
-  teal: 'bg-teal/20 text-cream border-teal/30',
-  muted: 'bg-cream/5 text-cream/40 border-cream/10',
+  gold: 'bg-gold/15 text-gold border-gold/25 shadow-[0_0_8px_rgba(201,168,76,0.1)]',
+  ember: 'bg-ember/15 text-ember-light border-ember/25 shadow-[0_0_8px_rgba(172,61,41,0.1)]',
+  teal: 'bg-teal/15 text-cream border-teal/25 shadow-[0_0_8px_rgba(25,79,76,0.1)]',
+  muted: 'bg-cream/5 text-cream/40 border-cream/8',
 };
 
 export function Badge({ children, variant = 'gold' }: BadgeProps) {

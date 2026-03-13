@@ -79,7 +79,7 @@ export function ConfessionRound() {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 flex items-center justify-center z-40 bg-charcoal/60 backdrop-blur-sm px-6"
+        className="fixed inset-0 flex items-center justify-center z-40 bg-charcoal/70 backdrop-blur-md px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -87,7 +87,7 @@ export function ConfessionRound() {
         <Card glow className="max-w-sm w-full text-center" {...scaleReveal}>
           {phase === 'prompt' && activeConfession && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <p className="label text-ember/60 mb-4">CONFESSION</p>
+              <p className="label text-ember/60 mb-4 tracking-[0.3em]">CONFESSION</p>
               <p className="heading-display text-lg text-cream leading-relaxed">
                 {activeConfession.question}
               </p>
@@ -96,7 +96,7 @@ export function ConfessionRound() {
 
           {phase === 'voting' && activeConfession && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <p className="label text-ember/60 mb-4">CONFESSION</p>
+              <p className="label text-ember/60 mb-4 tracking-[0.3em]">CONFESSION</p>
               <p className="heading-display text-lg text-cream leading-relaxed mb-6">
                 {activeConfession.question}
               </p>
@@ -130,8 +130,8 @@ export function ConfessionRound() {
 
           {phase === 'result' && result && (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-              <p className="label text-ember/60 mb-4">THE VERDICT</p>
-              <p className="heading-display text-3xl text-gold mb-2">
+              <p className="label text-ember/60 mb-4 tracking-[0.3em]">THE VERDICT</p>
+              <p className="heading-display text-3xl gold-shimmer mb-2">
                 {result.yesCount} / {result.total}
               </p>
               <p className="text-cream/50 font-body text-sm mb-1">said yes</p>

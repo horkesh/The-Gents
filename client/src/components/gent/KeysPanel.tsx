@@ -50,11 +50,11 @@ export function KeysPanel() {
 
             {/* Dedication selector */}
             <div className="w-full">
-              <p className="label text-cream/30 mb-2 text-center">DEDICATE TO</p>
-              <div className="flex flex-wrap gap-1 justify-center">
+              <p className="label text-cream/30 mb-2 text-center tracking-[0.2em]">DEDICATE TO</p>
+              <div className="flex flex-wrap gap-1.5 justify-center">
                 <button
                   onClick={() => setDedicatedTo(undefined)}
-                  className={`text-xs px-2 py-1 rounded font-body ${!dedicatedTo ? 'bg-gold/20 text-gold' : 'text-cream/30 hover:text-cream/50'}`}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg font-body transition-all duration-200 ${!dedicatedTo ? 'bg-gold/15 text-gold border border-gold/25' : 'text-cream/30 hover:text-cream/50 border border-transparent hover:border-cream/10'}`}
                 >
                   Everyone
                 </button>
@@ -62,7 +62,7 @@ export function KeysPanel() {
                   <button
                     key={guest.id}
                     onClick={() => setDedicatedTo(guest.id)}
-                    className={`text-xs px-2 py-1 rounded font-body ${dedicatedTo === guest.id ? 'bg-gold/20 text-gold' : 'text-cream/30 hover:text-cream/50'}`}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg font-body transition-all duration-200 ${dedicatedTo === guest.id ? 'bg-gold/15 text-gold border border-gold/25' : 'text-cream/30 hover:text-cream/50 border border-transparent hover:border-cream/10'}`}
                   >
                     {guest.alias || guest.name}
                   </button>

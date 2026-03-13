@@ -8,10 +8,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-  primary: 'bg-ember text-cream hover:bg-ember-light active:bg-ember-dark',
-  secondary: 'bg-teal text-cream hover:bg-teal-light active:bg-teal-dark',
-  ghost: 'border border-cream/10 text-cream/60 hover:bg-cream/5 active:bg-cream/10',
-  gold: 'border border-gold/30 text-gold hover:bg-gold/10 active:bg-gold/5',
+  primary: 'bg-ember text-cream hover:bg-ember-light active:bg-ember-dark shadow-[0_2px_12px_-2px_rgba(172,61,41,0.4)] hover:shadow-[0_4px_16px_-2px_rgba(172,61,41,0.5)]',
+  secondary: 'bg-teal text-cream hover:bg-teal-light active:bg-teal-dark shadow-[0_2px_12px_-2px_rgba(25,79,76,0.4)]',
+  ghost: 'border border-cream/10 text-cream/60 hover:bg-cream/5 hover:border-cream/20 active:bg-cream/10',
+  gold: 'border border-gold/30 text-gold hover:bg-gold/10 hover:border-gold/50 active:bg-gold/5 shadow-[0_2px_12px_-4px_rgba(201,168,76,0.2)] hover:shadow-[0_4px_16px_-4px_rgba(201,168,76,0.3)]',
 };
 
 const sizes = {
@@ -30,10 +30,12 @@ export function Button({
 }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.97 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
+      whileHover={disabled ? undefined : { scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`
-        font-body font-bold rounded-lg transition-colors
-        disabled:opacity-30 disabled:cursor-not-allowed
+        font-body font-bold rounded-lg transition-all duration-200
+        disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none
         ${variants[variant]} ${sizes[size]} ${className}
       `}
       disabled={disabled}

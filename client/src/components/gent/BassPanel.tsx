@@ -27,10 +27,10 @@ export function BassPanel() {
               onClick={() => handleVibeShift(mode)}
               whileTap={{ scale: 0.97 }}
               className={`
-                w-full p-4 rounded-xl border text-left transition-all
+                w-full p-4 rounded-xl border text-left transition-all duration-200
                 ${vibe === mode
-                  ? 'border-gold/40 bg-gold/10'
-                  : 'border-cream/5 bg-charcoal hover:bg-charcoal-lighter'}
+                  ? 'border-gold/30 bg-gold/10 shadow-[0_0_12px_rgba(201,168,76,0.1)]'
+                  : 'border-cream/5 bg-charcoal/60 hover:bg-charcoal-lighter hover:border-cream/10'}
               `}
             >
               <div className="flex items-center gap-3">

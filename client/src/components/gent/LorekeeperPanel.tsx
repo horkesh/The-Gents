@@ -53,7 +53,7 @@ export function LorekeeperPanel() {
 
       {/* Spotlight */}
       <div className="pt-4 border-t border-cream/5 space-y-2">
-        <p className="label text-cream/30">SPOTLIGHT</p>
+        <p className="label text-cream/30 tracking-[0.2em]">SPOTLIGHT</p>
         {guests.map((guest) => (
           <Button
             key={guest.id}
@@ -73,7 +73,7 @@ export function LorekeeperPanel() {
 
       {/* The Toast */}
       {act >= 3 && !toastUsed && (
-        <div className="pt-4 border-t border-gold/20">
+        <div className="pt-4 border-t border-gold/15">
           <Button
             variant="gold"
             size="lg"
@@ -86,7 +86,7 @@ export function LorekeeperPanel() {
       )}
 
       <div className="pt-4 border-t border-cream/5 space-y-3">
-        <p className="label text-cream/30">ACT CONTROLS</p>
+        <p className="label text-cream/30 tracking-[0.2em]">ACT CONTROLS</p>
         <Button
           variant="secondary"
           size="md"

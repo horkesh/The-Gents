@@ -70,11 +70,13 @@ export function TheToast() {
       {phase === 'speech' && (
         <motion.div
           key="toast-speech"
-          className="fixed inset-0 flex items-center justify-center z-45 bg-charcoal/80 backdrop-blur-md px-8"
+          className="fixed inset-0 flex items-center justify-center z-45 bg-charcoal/85 backdrop-blur-lg px-8"
           {...cinematicEntrance}
         >
-          <div className="text-center max-w-md">
-            <p className="label text-gold/60 mb-6">THE TOAST</p>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gold/5 blur-[100px] pointer-events-none" />
+          <div className="text-center max-w-md relative z-10">
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mx-auto mb-6" />
+            <p className="label text-gold/60 mb-6 tracking-[0.35em]">THE TOAST</p>
             <p className="heading-display-italic text-cream text-xl leading-relaxed">
               "{speech}"
             </p>
@@ -90,10 +92,10 @@ export function TheToast() {
           animate={{ opacity: 1 }}
         >
           <div className="text-center">
-            <p className="label text-gold mb-4">RAISE YOUR GLASS</p>
+            <p className="label text-gold mb-4 tracking-[0.35em]">RAISE YOUR GLASS</p>
             <motion.p
               key={countdown}
-              className="heading-display text-7xl text-gold"
+              className="heading-display text-7xl gold-shimmer drop-shadow-[0_0_30px_rgba(201,168,76,0.4)]"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
@@ -124,8 +126,8 @@ export function TheToast() {
           exit={{ opacity: 0 }}
         >
           <div className="text-center">
-            <p className="label text-gold/60 mb-4">THE TOAST</p>
-            <div className="rounded-xl overflow-hidden border-2 border-gold shadow-[0_0_30px_rgba(201,168,76,0.3)] max-w-sm">
+            <p className="label text-gold/60 mb-4 tracking-[0.35em]">THE TOAST</p>
+            <div className="rounded-2xl overflow-hidden border-2 border-gold shadow-[0_0_40px_rgba(201,168,76,0.3)] max-w-sm">
               <img src={photoUrl} alt="The Toast" className="w-full" />
             </div>
           </div>

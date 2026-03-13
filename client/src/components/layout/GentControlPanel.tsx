@@ -26,19 +26,23 @@ export function GentControlPanel() {
       {/* Toggle button */}
       <motion.button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full bg-gold/20
-                   border border-gold/30 flex items-center justify-center backdrop-blur-sm"
+        className="fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full glass
+                   border-gold/20 flex items-center justify-center
+                   shadow-[0_2px_12px_rgba(201,168,76,0.15)]"
         whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       >
-        <img src="/logo/01_Gold_logo.png" alt="Controls" className="w-8 h-8" />
+        <img src="/logo/01_Gold_logo.png" alt="Controls" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(201,168,76,0.2)]" />
       </motion.button>
 
       {/* Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-30 bg-charcoal/95 backdrop-blur-lg
-                       border-t border-gold/10 rounded-t-2xl safe-bottom"
+            className="fixed inset-x-0 bottom-0 z-30 glass-strong
+                       border-t border-gold/10 rounded-t-3xl safe-bottom
+                       shadow-[0_-8px_40px_rgba(0,0,0,0.3)]"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -73,7 +77,7 @@ export function GentControlPanel() {
             {/* Close */}
             <button
               onClick={() => setOpen(false)}
-              className="w-full py-3 text-cream/20 text-sm border-t border-cream/5"
+              className="w-full py-3 text-cream/20 text-sm border-t border-cream/5 hover:text-cream/40 transition-colors"
             >
               Close
             </button>

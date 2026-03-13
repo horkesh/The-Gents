@@ -25,15 +25,15 @@ export function GuestBook() {
         className="fixed bottom-20 left-0 right-0 flex justify-center px-6 z-30 pointer-events-none"
         {...slideUp}
       >
-        <div className="bg-charcoal-light border border-gold/20 rounded-xl p-4 max-w-sm w-full shadow-lg pointer-events-auto">
-          <p className="label text-gold/40 text-center mb-3">THE GUEST BOOK</p>
+        <div className="glass-strong rounded-2xl p-4 max-w-sm w-full shadow-[0_-4px_20px_rgba(0,0,0,0.3)] pointer-events-auto gradient-border">
+          <p className="label text-gold/40 text-center mb-3 tracking-[0.3em]">THE GUEST BOOK</p>
           <div className="flex gap-2">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 100))}
               placeholder="Leave a note for the guest book..."
-              className="flex-1 bg-charcoal border border-cream/10 rounded-lg px-3 py-2 text-cream text-sm font-body placeholder:text-cream/20 focus:border-gold/30 focus:outline-none"
+              className="flex-1 glass rounded-xl px-3 py-2.5 text-cream text-sm font-body placeholder:text-cream/15 focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200"
               maxLength={100}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             />

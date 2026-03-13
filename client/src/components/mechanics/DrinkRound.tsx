@@ -54,16 +54,16 @@ function DrinkCard({
 }) {
   return (
     <motion.div
-      className="fixed inset-0 flex items-center justify-center z-40 bg-charcoal/60 backdrop-blur-sm px-6"
+      className="fixed inset-0 flex items-center justify-center z-40 bg-charcoal/70 backdrop-blur-md px-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <Card glow className="max-w-sm w-full text-center" {...scaleReveal} onAnimationStart={onAppear}>
-        <p className="label text-gold/50 mb-3">
+        <p className="label text-gold/50 mb-3 tracking-[0.3em]">
           {fromGent} serves
           {dedicatedTo && (
-            <span className="block text-gold text-xs mt-1">
+            <span className="block text-gold/70 text-xs mt-1.5 tracking-[0.2em]">
               Crafted for {dedicatedTo}
             </span>
           )}
@@ -72,7 +72,7 @@ function DrinkCard({
         {/* Cocktail image */}
         {cocktail.imageUrl && (
           <motion.div
-            className="w-48 h-48 mx-auto mb-4 rounded-xl overflow-hidden"
+            className="w-48 h-48 mx-auto mb-4 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-gold/10"
             variants={pourAnimation}
             initial="initial"
             animate="animate"

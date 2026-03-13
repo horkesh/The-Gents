@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
 import { usePartyContext } from '@/contexts/PartyContext';
+import { useAudio } from '@/contexts/AudioContext';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { pourAnimation, scaleReveal } from '@/lib/animations';
@@ -9,8 +10,10 @@ import type { Cocktail } from '@the-toast/shared';
 export function DrinkRound() {
   const { socket } = useSocketContext();
   const { activeDrink } = usePartyContext();
+  const { playSfx } = useAudio();
 
   const handleAccept = (cocktailName: string) => {
+    playSfx('clink');
     socket?.emit('ACCEPT_DRINK', { cocktailName });
   };
 
@@ -26,6 +29,7 @@ export function DrinkRound() {
           fromGent={activeDrink.fromGent}
           onAccept={() => handleAccept(activeDrink.cocktail.name)}
           onDodge={() => handleDodge(activeDrink.cocktail.name)}
+          onAppear={() => playSfx('pour')}
         />
       )}
     </AnimatePresence>
@@ -37,11 +41,13 @@ function DrinkCard({
   fromGent,
   onAccept,
   onDodge,
+  onAppear,
 }: {
   cocktail: Cocktail;
   fromGent: string;
   onAccept: () => void;
   onDodge: () => void;
+  onAppear: () => void;
 }) {
   return (
     <motion.div
@@ -50,7 +56,7 @@ function DrinkCard({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <Card glow className="max-w-sm w-full text-center" {...scaleReveal}>
+      <Card glow className="max-w-sm w-full text-center" {...scaleReveal} onAnimationStart={onAppear}>
         <p className="label text-gold/50 mb-3">{fromGent} serves</p>
 
         {/* Cocktail image */}

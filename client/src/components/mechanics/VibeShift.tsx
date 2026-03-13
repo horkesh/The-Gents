@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
+import { useAudio } from '@/contexts/AudioContext';
 import type { VibeMode } from '@the-toast/shared';
 
 const vibeFilters: Record<VibeMode, string> = {
@@ -17,6 +18,7 @@ const vibeOverlayColors: Record<VibeMode, string> = {
 
 export function VibeShiftOverlay() {
   const { socket } = useSocketContext();
+  const { playSfx } = useAudio();
   const [narration, setNarration] = useState<string | null>(null);
   const [currentVibe, setCurrentVibe] = useState<VibeMode>('slow_burn');
 
@@ -26,6 +28,7 @@ export function VibeShiftOverlay() {
     socket.on('VIBE_CHANGED', ({ mode, narration: text }) => {
       setCurrentVibe(mode);
       setNarration(text);
+      playSfx('scratch');
       setTimeout(() => setNarration(null), 4000);
     });
 

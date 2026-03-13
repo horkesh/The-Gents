@@ -74,10 +74,10 @@ Depends on Phase 1 Daily.co setup.
 No external dependencies. Needs audio asset files.
 
 - [ ] **Source audio assets** — 3 ambient loops (slow_burn, cruise, ignition) + 5 SFX (pour, clink, shutter, envelope, scratch).
-- [ ] **Audio manager** — `client/src/lib/audio.ts`
+- [x] **Audio manager** — `client/src/lib/audio.ts`
   Web Audio API, crossfade ambient loops on vibe shift, volume control, SFX triggers.
-- [ ] **AudioContext provider** — `client/src/contexts/AudioContext.tsx`
-- [ ] **Integrate SFX** — wire into VibeShift, DrinkRound, ConfessionRound, GroupSnap components.
+- [x] **AudioContext provider** — `client/src/contexts/AudioContext.tsx`
+- [x] **Integrate SFX** — wire into VibeShift, DrinkRound, ConfessionRound, GroupSnap components.
 
 ---
 
@@ -108,3 +108,4 @@ No external dependencies. Needs audio asset files.
 | 2026-03-13 | Priority 0: All 6 quick fixes complete | planning.md, STATUS.md |
 | 2026-03-13 | Phase 1: External service layers built (Daily, Supabase, Redis) | planning.md |
 | 2026-03-13 | Phase 2: Video components (VideoGrid, VideoTile, VideoControls) + DailyProvider | planning.md |
+| 2026-03-13 | Phase 3: Audio system (AudioManager, AudioProvider, SFX wiring) | planning.md |

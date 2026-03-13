@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
 import { usePartyContext } from '@/contexts/PartyContext';
+import { useAudio } from '@/contexts/AudioContext';
 
 export function GroupSnap() {
   const { socket } = useSocketContext();
   const { snapCountdown } = usePartyContext();
+  const { playSfx } = useAudio();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,7 +15,7 @@ export function GroupSnap() {
 
     socket.on('SNAP_COUNTDOWN', ({ seconds }) => {
       if (seconds === 0) {
-        // Capture selfie and upload
+        playSfx('shutter');
         captureAndUpload();
       }
     });

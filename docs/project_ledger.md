@@ -70,3 +70,31 @@ Created `docs/planning.md` as an active work tracker synthesizing ROADMAP + STAT
 - `docs/planning.md` — NEW: active work tracker
 - `docs/STATUS.md` — updated feature table and placeholders section
 - `docs/state-of-app.md` — will be updated after Phase completion
+
+---
+
+## 2026-03-13 — Session 6 (cont): Phase 1-3 Implementation
+
+### Phase 1: External Service Layers
+- `server/src/services/daily.ts` — Daily.co room creation + token generation, no-op when unconfigured
+- `server/src/services/supabase.ts` — Supabase CRUD (sessions, profiles, snapshots, wrapped), no-op fallback
+- `server/src/services/redis.ts` — Redis room store with 2h TTL, no-op fallback
+- `server/src/routes/daily.ts` — Token proxy endpoint
+- `server/src/services/room.ts` — Daily room auto-created on room creation (fire-and-forget)
+
+### Phase 2: Video Components
+- `client/src/components/video/VideoGrid.tsx` — Gent row + guest grid, active speaker highlight
+- `client/src/components/video/VideoTile.tsx` — Daily track hooks, composes ParticipantTile
+- `client/src/components/video/ParticipantTile.tsx` — Pure display component, no Daily dependency
+- `client/src/components/video/VideoControls.tsx` — Mic/camera toggle
+- `client/src/pages/Party.tsx` — DailyProvider integration, useEffect callObject lifecycle
+- `client/vite.config.ts` — Vendor chunking (react, daily, framer)
+
+### Phase 3: Audio System
+- `client/src/lib/audio.ts` — AudioManager class: Web Audio API, crossfade ambient loops, SFX playback, volume control
+- `client/src/contexts/AudioContext.tsx` — AudioProvider with auto-init on interaction, vibe crossfade, mute/volume
+- `client/src/App.tsx` — AudioProvider added to provider hierarchy
+- `client/src/components/mechanics/VibeShift.tsx` — scratch SFX on vibe change
+- `client/src/components/mechanics/DrinkRound.tsx` — pour SFX on appear, clink on accept
+- `client/src/components/mechanics/ConfessionRound.tsx` — envelope SFX on prompt
+- `client/src/components/mechanics/GroupSnap.tsx` — shutter SFX on snap

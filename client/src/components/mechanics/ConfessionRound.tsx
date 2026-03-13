@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
 import { usePartyContext } from '@/contexts/PartyContext';
+import { useAudio } from '@/contexts/AudioContext';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { scaleReveal } from '@/lib/animations';
@@ -11,6 +12,7 @@ type Phase = 'prompt' | 'voting' | 'result';
 export function ConfessionRound() {
   const { socket } = useSocketContext();
   const { activeConfession } = usePartyContext();
+  const { playSfx } = useAudio();
   const [phase, setPhase] = useState<Phase>('prompt');
   const [voted, setVoted] = useState(false);
   const [result, setResult] = useState<{
@@ -28,6 +30,7 @@ export function ConfessionRound() {
       setVoted(false);
       setResult(null);
       setTimer(10);
+      playSfx('envelope');
 
       // Auto-advance to voting after 2 seconds
       const t = setTimeout(() => setPhase('voting'), 2000);

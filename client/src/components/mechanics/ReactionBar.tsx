@@ -10,12 +10,13 @@ export function ReactionBar() {
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 py-2 px-4">
+    <div className="flex items-center justify-center gap-2 py-2 px-4" role="toolbar" aria-label="Reactions">
       {EMOJIS.map((emoji) => (
         <motion.button
           key={emoji}
           onClick={() => sendReaction(emoji)}
           whileTap={{ scale: 1.4 }}
+          aria-label={`Send ${emoji} reaction`}
           className="w-11 h-11 flex items-center justify-center text-xl
                      rounded-full bg-charcoal-light/80 backdrop-blur-sm
                      border border-cream/5 hover:border-cream/20

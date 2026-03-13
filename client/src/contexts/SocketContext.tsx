@@ -22,9 +22,24 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const s = io('/party', {
       autoConnect: false,
       transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
     }) as TypedSocket;
 
-    s.on('connect', () => setConnected(true));
+    s.on('connect', () => {
+      setConnected(true);
+
+      // Rejoin room if we had one before disconnect
+      const stored = sessionStorage.getItem('theToast_profile');
+      const code = sessionStorage.getItem('theToast_roomCode');
+      if (stored && code) {
+        const profile = JSON.parse(stored);
+        s.emit('JOIN_ROOM', { code, profile });
+      }
+    });
+
     s.on('disconnect', () => setConnected(false));
 
     setSocket(s);

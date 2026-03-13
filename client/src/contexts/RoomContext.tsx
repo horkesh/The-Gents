@@ -79,6 +79,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     (code: string, profile: Pick<ParticipantProfile, 'id' | 'name' | 'role' | 'photoUrl'>) => {
       if (!socket) return;
       setUserId(profile.id);
+      sessionStorage.setItem('theToast_roomCode', code);
       socket.connect();
       socket.emit('JOIN_ROOM', { code, profile });
     },
@@ -89,6 +90,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     if (!socket) return;
     socket.emit('LEAVE_ROOM');
     socket.disconnect();
+    sessionStorage.removeItem('theToast_roomCode');
     setRoom(null);
   }, [socket]);
 

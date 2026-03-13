@@ -83,11 +83,11 @@ No external dependencies. Needs audio asset files.
 
 ## Phase 4: Polish & Error Handling
 
-- [ ] **Error boundaries** — app root + per-page with retry buttons.
-- [ ] **Socket reconnection** — auto-reconnect with backoff, room rejoin from sessionStorage.
+- [x] **Error boundaries** — app root ErrorBoundary with retry button.
+- [x] **Socket reconnection** — auto-reconnect with exponential backoff (1s→10s, 10 attempts), room rejoin from sessionStorage.
 - [ ] **Loading skeletons** — lobby participant list, scene transitions, cocktail generation.
-- [ ] **Mobile optimization** — 44px touch targets, prevent zoom on focus, orientation lock.
-- [ ] **Accessibility** — focus rings, ARIA labels, `prefers-reduced-motion`, color contrast audit.
+- [x] **Mobile optimization** — 44px min touch targets on buttons, prevent zoom on input focus, safe area padding.
+- [x] **Accessibility** — focus rings (:focus-visible), ARIA labels on reactions/controls, `prefers-reduced-motion` disable.
 
 ---
 
@@ -109,3 +109,4 @@ No external dependencies. Needs audio asset files.
 | 2026-03-13 | Phase 1: External service layers built (Daily, Supabase, Redis) | planning.md |
 | 2026-03-13 | Phase 2: Video components (VideoGrid, VideoTile, VideoControls) + DailyProvider | planning.md |
 | 2026-03-13 | Phase 3: Audio system (AudioManager, AudioProvider, SFX wiring) | planning.md |
+| 2026-03-13 | Phase 4: Error boundary, socket reconnection, mobile/a11y polish | planning.md |

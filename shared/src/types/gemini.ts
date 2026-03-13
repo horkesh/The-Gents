@@ -84,6 +84,9 @@ export interface WrappedGenerationRequest {
     confessionsParticipated: number;
     timesSpotlighted: number;
     snapsAppeared: number;
+    arrivalOrder: number;
+    cocktailsAccepted: string[];
+    cocktailsDodged: string[];
   };
   keyMoments: string[];
 }

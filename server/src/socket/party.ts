@@ -1,11 +1,13 @@
 import type { Namespace, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
 import { getRoom, getParticipantDisplayName } from '../services/room.js';
+import { arrivalCounters } from './lobby.js';
 import { startParty, advanceAct, wrapUp } from '../services/session.js';
 import { assembleContext } from '../services/gemini/context.js';
 import { generateCocktail } from '../services/gemini/cocktails.js';
 import { generateConfession, generateConfessionCommentary } from '../services/gemini/confessions.js';
 import { generateVibeNarration, generateWrappedNote, generateSessionTitle } from '../services/gemini/wrapped.js';
+import { generateSpotlightRoast, generateCompatibilityQuip, generateToastSpeech } from '../services/gemini/social.js';
 import { generateComposite } from '../services/gemini/composite.js';
 import { logger } from '../utils/logger.js';
 
@@ -13,13 +15,25 @@ type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type PartyNamespace = Namespace<ClientToServerEvents, ServerToClientEvents>;
 
 // Active confession votes per room
-const confessionVotes = new Map<string, { question: string; votes: Map<string, boolean> }>();
+const confessionVotes = new Map<string, { question: string; votes: Map<string, boolean | null> }>();
 
 // Active snap uploads per room
 const snapUploads = new Map<string, Map<string, string>>();
 
 // Key moments per room (for Wrapped cards)
 const keyMoments = new Map<string, string[]>();
+
+// Guest book entries per room
+const guestBookEntries = new Map<string, Map<string, string>>();
+
+// Toast used flag per room
+const toastUsed = new Map<string, boolean>();
+
+// Per-guest vote history for compatibility (Feature #4)
+const voteHistory = new Map<string, Map<string, Map<string, boolean | null>>>();
+
+// Per-guest drink decisions for compatibility
+const drinkDecisions = new Map<string, Map<string, Map<string, 'accept' | 'dodge'>>>();
 
 function addKeyMoment(roomCode: string, moment: string) {
   if (!keyMoments.has(roomCode)) {
@@ -36,6 +50,9 @@ const participantStats = new Map<string, Map<string, {
   confessionsParticipated: number;
   timesSpotlighted: number;
   snapsAppeared: number;
+  arrivalOrder: number;
+  cocktailsAccepted: string[];
+  cocktailsDodged: string[];
 }>>();
 
 function getRoomCode(socket: PartySocket): string | undefined {
@@ -58,6 +75,9 @@ function getOrCreateStats(roomCode: string, participantId: string) {
       confessionsParticipated: 0,
       timesSpotlighted: 0,
       snapsAppeared: 0,
+      arrivalOrder: 0,
+      cocktailsAccepted: [],
+      cocktailsDodged: [],
     });
   }
   return roomStats.get(participantId)!;
@@ -103,6 +123,11 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
           scene: transition.scene,
           narration: transition.narration,
         });
+
+        // Open guest book in Act IV
+        if (transition.act === 4) {
+          namespace.to(code).emit('GUEST_BOOK_OPEN');
+        }
       }
     } catch (err) {
       logger.error('party', 'Failed to advance act', err);
@@ -118,42 +143,6 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     await generateWrappedCards(namespace, code);
   });
 
-  // ─── GROUP DRINK ──────────────────────────────
-  socket.on('SEND_GROUP_DRINK', async () => {
-    const code = getRoomCode(socket);
-    if (!code) return;
-
-    try {
-      const room = await getRoom(code);
-      if (!room) return;
-
-      const context = assembleContext(room);
-      const cocktail = await generateCocktail(context);
-
-      const cocktailData = {
-        name: cocktail.name,
-        story: cocktail.story,
-        imageUrl: cocktail.imageBase64 ? `data:image/png;base64,${cocktail.imageBase64}` : '',
-      };
-
-      namespace.to(code).emit('DRINK_SENT', {
-        cocktail: cocktailData,
-        fromGent: 'Keys & Cocktails',
-      });
-
-      // Update stats for all guests
-      for (const p of room.participants.filter((p) => p.role === 'guest')) {
-        const stats = getOrCreateStats(code, p.id);
-        stats.drinksReceived++;
-      }
-
-      addKeyMoment(code, `"${cocktail.name}" was served to the room`);
-      logger.info('party', `Drink "${cocktail.name}" sent to all in ${code}`);
-    } catch (err) {
-      logger.error('party', 'Failed to send group drink', err);
-    }
-  });
-
   // ─── ACCEPT / DODGE DRINK ─────────────────────
   socket.on('ACCEPT_DRINK', async ({ cocktailName }) => {
     const code = getRoomCode(socket);
@@ -162,6 +151,10 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const displayName = await getParticipantDisplayName(code, socket.id, socket.id);
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksAccepted++;
+    stats.cocktailsAccepted.push(cocktailName);
+
+    // Track for compatibility
+    trackDrinkDecision(code, socket.id, cocktailName, 'accept');
 
     namespace.to(code).emit('DRINK_ACCEPTED', {
       participantName: displayName,
@@ -176,6 +169,10 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const displayName = await getParticipantDisplayName(code, socket.id, socket.id);
     const stats = getOrCreateStats(code, socket.id);
     stats.drinksDodged++;
+    stats.cocktailsDodged.push(cocktailName);
+
+    // Track for compatibility
+    trackDrinkDecision(code, socket.id, cocktailName, 'dodge');
 
     namespace.to(code).emit('DRINK_DODGED', {
       participantName: displayName,
@@ -216,6 +213,9 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const stats = getOrCreateStats(code, socket.id);
     stats.confessionsParticipated++;
 
+    // Track for compatibility
+    trackVote(code, socket.id, confession.question, answer);
+
     // Check if all connected participants have voted
     const room = await getRoom(code);
     if (!room) return;
@@ -223,12 +223,15 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     const connectedCount = room.participants.filter((p) => p.connected).length;
     if (confession.votes.size >= connectedCount) {
       // Tally results
-      const yesCount = Array.from(confession.votes.values()).filter(Boolean).length;
+      const votes = Array.from(confession.votes.values());
+      const yesCount = votes.filter((v) => v === true).length;
+      const noCount = votes.filter((v) => v === false).length;
+      const mysteryCount = votes.filter((v) => v === null).length;
       const total = confession.votes.size;
 
       const context = assembleContext(room);
       const commentary = await generateConfessionCommentary(
-        confession.question, yesCount, total, context
+        confession.question, yesCount, noCount, mysteryCount, total, context
       );
 
       // Increment timesSpotlighted for all participants who voted
@@ -240,11 +243,13 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
       namespace.to(code).emit('CONFESSION_RESULT', {
         question: confession.question,
         yesCount,
+        noCount,
+        mysteryCount,
         total,
         commentary,
       });
 
-      addKeyMoment(code, `Confession result: ${yesCount}/${total} said YES to "${confession.question}"`);
+      addKeyMoment(code, `Confession result: ${yesCount}/${total} said YES${mysteryCount > 0 ? `, ${mysteryCount} refused to answer` : ''} to "${confession.question}"`);
       confessionVotes.delete(code);
     }
   });
@@ -312,6 +317,135 @@ export function setupPartyHandlers(namespace: PartyNamespace, socket: PartySocke
     }
   });
 
+  // ─── SPOTLIGHT ───────────────────────────────
+  socket.on('TRIGGER_SPOTLIGHT', async ({ targetId }) => {
+    const code = getRoomCode(socket);
+    if (!code) return;
+
+    try {
+      const room = await getRoom(code);
+      if (!room) return;
+
+      // Validate sender is lorekeeper
+      const sender = room.participants.find((p) => p.id === socket.id);
+      if (sender?.role !== 'lorekeeper') return;
+
+      const target = room.participants.find((p) => p.id === targetId);
+      if (!target) return;
+
+      const roast = await generateSpotlightRoast(
+        target.alias || target.name,
+        [...target.traits].filter(Boolean),
+        target.dossier || ''
+      );
+
+      namespace.to(code).emit('SPOTLIGHT', { profile: target, roast });
+
+      const stats = getOrCreateStats(code, targetId);
+      stats.timesSpotlighted++;
+
+      addKeyMoment(code, `${target.alias || target.name} was spotlighted: "${roast}"`);
+      logger.info('party', `Spotlight on ${target.alias} in ${code}`);
+    } catch (err) {
+      logger.error('party', 'Failed to spotlight', err);
+    }
+  });
+
+  // ─── GUEST BOOK ─────────────────────────────
+  socket.on('SUBMIT_GUEST_BOOK', ({ message }) => {
+    const code = getRoomCode(socket);
+    if (!code) return;
+
+    if (!guestBookEntries.has(code)) {
+      guestBookEntries.set(code, new Map());
+    }
+
+    const entries = guestBookEntries.get(code)!;
+    // One entry per guest, max 100 chars
+    entries.set(socket.id, message.slice(0, 100));
+    logger.info('party', `Guest book entry in ${code}`);
+  });
+
+  // ─── THE TOAST ──────────────────────────────
+  socket.on('TRIGGER_TOAST', async () => {
+    const code = getRoomCode(socket);
+    if (!code) return;
+
+    // Once per party
+    if (toastUsed.get(code)) return;
+    toastUsed.set(code, true);
+
+    try {
+      const room = await getRoom(code);
+      if (!room) return;
+
+      const roomKeyMoments = keyMoments.get(code) || [];
+      const aliases = room.participants.map((p) => p.alias || p.name);
+      const speech = await generateToastSpeech(roomKeyMoments, aliases);
+
+      // Phase 1: Speech
+      namespace.to(code).emit('TOAST_SPEECH', { speech });
+      addKeyMoment(code, `The Toast was raised: "${speech}"`);
+
+      // Phase 2: After 8 seconds, trigger snap
+      await sleep(8000);
+      namespace.to(code).emit('TOAST_SNAP');
+
+      // Snap countdown
+      snapUploads.set(code, new Map());
+      for (let i = 3; i >= 0; i--) {
+        namespace.to(code).emit('SNAP_COUNTDOWN', { seconds: i });
+        if (i > 0) await sleep(1000);
+      }
+    } catch (err) {
+      logger.error('party', 'Failed to trigger toast', err);
+    }
+  });
+
+  // ─── COCKTAIL DEDICATIONS ──────────────────
+  socket.on('SEND_GROUP_DRINK', async (payload) => {
+    const code = getRoomCode(socket);
+    if (!code) return;
+
+    try {
+      const room = await getRoom(code);
+      if (!room) return;
+
+      const dedicatedTo = payload?.dedicatedTo;
+      const targetParticipant = dedicatedTo
+        ? room.participants.find((p) => p.id === dedicatedTo)
+        : undefined;
+      const targetAlias = targetParticipant?.alias || targetParticipant?.name;
+
+      const context = assembleContext(room);
+      const cocktail = await generateCocktail(context, targetAlias);
+
+      const cocktailData = {
+        name: cocktail.name,
+        story: cocktail.story,
+        imageUrl: cocktail.imageBase64 ? `data:image/png;base64,${cocktail.imageBase64}` : '',
+      };
+
+      namespace.to(code).emit('DRINK_SENT', {
+        cocktail: cocktailData,
+        fromGent: 'Keys & Cocktails',
+        dedicatedTo: targetAlias,
+      });
+
+      // Update stats for all guests
+      for (const p of room.participants.filter((p) => p.role === 'guest')) {
+        const stats = getOrCreateStats(code, p.id);
+        stats.drinksReceived++;
+      }
+
+      const dedicationNote = targetAlias ? ` — dedicated to ${targetAlias}` : '';
+      addKeyMoment(code, `"${cocktail.name}" was served to the room${dedicationNote}`);
+      logger.info('party', `Drink "${cocktail.name}" sent to all in ${code}${dedicationNote}`);
+    } catch (err) {
+      logger.error('party', 'Failed to send group drink', err);
+    }
+  });
+
   // ─── VIBE SHIFT ───────────────────────────────
   socket.on('VIBE_SHIFT', async ({ mode }) => {
     const code = getRoomCode(socket);
@@ -343,6 +477,18 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
   try {
     const sessionTitle = await generateSessionTitle(room.scene?.location || 'the evening');
     const roomKeyMoments = keyMoments.get(code) || [];
+    const entries = guestBookEntries.get(code);
+    const guestBookMessages = entries ? Array.from(entries.values()) : [];
+    const totalGuests = room.participants.length;
+
+    // Set arrival order on stats from arrivalCounters
+    const arrivalCount = arrivalCounters.get(code) || 0;
+    for (let i = 0; i < room.participants.length; i++) {
+      const stats = getOrCreateStats(code, room.participants[i].id);
+      if (stats.arrivalOrder === 0) {
+        stats.arrivalOrder = i + 1; // fallback sequential order
+      }
+    }
 
     for (const participant of room.participants) {
       const stats = getOrCreateStats(code, participant.id);
@@ -353,12 +499,27 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
         keyMoments: roomKeyMoments,
       });
 
+      // Compute compatibility (Feature #4)
+      let mostAlignedWith: { alias: string; matchScore: number; quip: string } | undefined;
+      const compat = computeCompatibility(code, participant.id, room.participants);
+      if (compat) {
+        const quip = await generateCompatibilityQuip(
+          participant.alias || participant.name,
+          compat.alias,
+          compat.matchScore
+        );
+        mostAlignedWith = { ...compat, quip };
+      }
+
       namespace.to(code).emit('WRAPPED_READY', {
         stats,
         lorekeeperNote: wrappedResult.lorekeeperNote,
         sessionTitle,
         photos: [],
         profile: participant,
+        guestBookEntries: guestBookMessages,
+        mostAlignedWith,
+        totalGuests,
       });
     }
   } catch (err) {
@@ -366,6 +527,67 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
   } finally {
     cleanupRoom(code);
   }
+}
+
+function trackVote(roomCode: string, participantId: string, question: string, answer: boolean | null) {
+  if (!voteHistory.has(roomCode)) voteHistory.set(roomCode, new Map());
+  const roomVotes = voteHistory.get(roomCode)!;
+  if (!roomVotes.has(participantId)) roomVotes.set(participantId, new Map());
+  roomVotes.get(participantId)!.set(question, answer);
+}
+
+function trackDrinkDecision(roomCode: string, participantId: string, cocktailName: string, decision: 'accept' | 'dodge') {
+  if (!drinkDecisions.has(roomCode)) drinkDecisions.set(roomCode, new Map());
+  const roomDrinks = drinkDecisions.get(roomCode)!;
+  if (!roomDrinks.has(participantId)) roomDrinks.set(participantId, new Map());
+  roomDrinks.get(participantId)!.set(cocktailName, decision);
+}
+
+function computeCompatibility(roomCode: string, participantId: string, participants: { id: string; alias: string; name: string }[]) {
+  const roomVotes = voteHistory.get(roomCode);
+  const roomDrinks = drinkDecisions.get(roomCode);
+  const myVotes = roomVotes?.get(participantId);
+  const myDrinks = roomDrinks?.get(participantId);
+
+  let bestMatch = { id: '', alias: '', score: 0, total: 0 };
+
+  for (const other of participants) {
+    if (other.id === participantId) continue;
+
+    let matches = 0;
+    let total = 0;
+
+    // Compare votes
+    const otherVotes = roomVotes?.get(other.id);
+    if (myVotes && otherVotes) {
+      for (const [question, myAnswer] of myVotes) {
+        const otherAnswer = otherVotes.get(question);
+        if (otherAnswer !== undefined) {
+          total++;
+          if (myAnswer === otherAnswer) matches++;
+        }
+      }
+    }
+
+    // Compare drink decisions
+    const otherDrinks = roomDrinks?.get(other.id);
+    if (myDrinks && otherDrinks) {
+      for (const [cocktail, myDecision] of myDrinks) {
+        const otherDecision = otherDrinks.get(cocktail);
+        if (otherDecision !== undefined) {
+          total++;
+          if (myDecision === otherDecision) matches++;
+        }
+      }
+    }
+
+    if (total >= 3 && matches / total > bestMatch.score / Math.max(bestMatch.total, 1)) {
+      bestMatch = { id: other.id, alias: other.alias || other.name, score: matches, total };
+    }
+  }
+
+  if (bestMatch.total < 3) return undefined;
+  return { alias: bestMatch.alias, matchScore: Math.round((bestMatch.score / bestMatch.total) * 100) };
 }
 
 /**
@@ -376,6 +598,11 @@ function cleanupRoom(code: string) {
   participantStats.delete(code);
   confessionVotes.delete(code);
   snapUploads.delete(code);
+  arrivalCounters.delete(code);
+  guestBookEntries.delete(code);
+  toastUsed.delete(code);
+  voteHistory.delete(code);
+  drinkDecisions.delete(code);
   logger.info('party', `Cleaned up state for room ${code}`);
 }
 

@@ -30,6 +30,9 @@ export interface ParticipantStats {
   confessionsParticipated: number;
   timesSpotlighted: number;
   snapsAppeared: number;
+  arrivalOrder: number;
+  cocktailsAccepted: string[];
+  cocktailsDodged: string[];
 }
 
 export interface Cocktail {
@@ -51,6 +54,8 @@ export interface SessionEvent {
   timestamp: number;
 }
 
+import type { PartyTheme } from '../constants/themes.js';
+
 export interface RoomState {
   code: string;
   participants: ParticipantProfile[];
@@ -61,4 +66,5 @@ export interface RoomState {
   dailyRoomUrl: string;
   startedAt: number | null;
   actStartedAt: number | null;
+  theme: PartyTheme;
 }

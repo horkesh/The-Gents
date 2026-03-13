@@ -1,6 +1,17 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useSocketContext } from './SocketContext';
-import type { ActNumber, VibeMode, SceneData, Cocktail, SessionEvent } from '@the-toast/shared';
+import type { ActNumber, VibeMode, SceneData, Cocktail, SessionEvent, ParticipantProfile } from '@the-toast/shared';
+
+interface EntranceData {
+  profile: ParticipantProfile;
+  intro: string;
+  arrivalOrder: number;
+}
+
+interface SpotlightData {
+  profile: ParticipantProfile;
+  roast: string;
+}
 
 interface PartyState {
   act: ActNumber;
@@ -10,8 +21,11 @@ interface PartyState {
   actStartedAt: number | null;
   actDuration: number | null; // ms
   activeConfession: { question: string } | null;
-  activeDrink: { cocktail: Cocktail; fromGent: string } | null;
+  activeDrink: { cocktail: Cocktail; fromGent: string; dedicatedTo?: string } | null;
   snapCountdown: number | null;
+  activeEntrance: EntranceData | null;
+  activeSpotlight: SpotlightData | null;
+  guestBookOpen: boolean;
 }
 
 interface PartyContextValue extends PartyState {
@@ -29,6 +43,9 @@ const PartyContext = createContext<PartyContextValue>({
   activeConfession: null,
   activeDrink: null,
   snapCountdown: null,
+  activeEntrance: null,
+  activeSpotlight: null,
+  guestBookOpen: false,
   isPartyActive: false,
   isWrapped: false,
 });
@@ -45,6 +62,9 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     activeConfession: null,
     activeDrink: null,
     snapCountdown: null,
+    activeEntrance: null,
+    activeSpotlight: null,
+    guestBookOpen: false,
   });
 
   useEffect(() => {
@@ -94,8 +114,26 @@ export function PartyProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({ ...prev, activeConfession: null }));
     });
 
-    socket.on('DRINK_SENT', ({ cocktail, fromGent }) => {
-      setState((prev) => ({ ...prev, activeDrink: { cocktail, fromGent } }));
+    socket.on('DRINK_SENT', ({ cocktail, fromGent, dedicatedTo }) => {
+      setState((prev) => ({ ...prev, activeDrink: { cocktail, fromGent, dedicatedTo } }));
+    });
+
+    socket.on('GUEST_ENTRANCE', (data) => {
+      setState((prev) => ({ ...prev, activeEntrance: data }));
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, activeEntrance: null }));
+      }, 4000);
+    });
+
+    socket.on('SPOTLIGHT', (data) => {
+      setState((prev) => ({ ...prev, activeSpotlight: data }));
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, activeSpotlight: null }));
+      }, 6000);
+    });
+
+    socket.on('GUEST_BOOK_OPEN', () => {
+      setState((prev) => ({ ...prev, guestBookOpen: true }));
     });
 
     socket.on('SNAP_COUNTDOWN', ({ seconds }) => {
@@ -117,6 +155,9 @@ export function PartyProvider({ children }: { children: ReactNode }) {
       socket.off('DRINK_SENT');
       socket.off('SNAP_COUNTDOWN');
       socket.off('PHOTO_READY');
+      socket.off('GUEST_ENTRANCE');
+      socket.off('SPOTLIGHT');
+      socket.off('GUEST_BOOK_OPEN');
     };
   }, [socket]);
 

@@ -12,6 +12,10 @@ export async function generateWrappedNote(
 ): Promise<WrappedGenerationResult> {
   const { alias, traits, stats, keyMoments } = request;
 
+  const drinkNarrative = stats.cocktailsAccepted.length > 0 || stats.cocktailsDodged.length > 0
+    ? `\nDrink history: Accepted: ${stats.cocktailsAccepted.join(', ') || 'none'}. Dodged: ${stats.cocktailsDodged.join(', ') || 'none'}.`
+    : '';
+
   const result = await genai.models.generateContent({
     model: TEXT_MODEL,
     contents: [
@@ -22,7 +26,7 @@ export async function generateWrappedNote(
             text: `Write the Lorekeeper's Note for ${alias}'s evening at The Toast.
 
 Their traits: ${traits.join(', ')}
-Stats: ${stats.drinksReceived} drinks received (${stats.drinksAccepted} accepted, ${stats.drinksDodged} dodged), ${stats.confessionsParticipated} confessions, spotlighted ${stats.timesSpotlighted} times, appeared in ${stats.snapsAppeared} group photos.
+Stats: ${stats.drinksReceived} drinks received (${stats.drinksAccepted} accepted, ${stats.drinksDodged} dodged), ${stats.confessionsParticipated} confessions, spotlighted ${stats.timesSpotlighted} times, appeared in ${stats.snapsAppeared} group photos.${drinkNarrative}
 Key moments: ${keyMoments.join('. ')}
 
 Write EXACTLY 2 sentences. The tone should be:
@@ -30,6 +34,7 @@ Write EXACTLY 2 sentences. The tone should be:
 - Cinematic and observational, like a narrator closing a chapter
 - Never mean, never generic
 - Reference specific moments or stats where possible
+- Reference their drink stats narratively. If they dodged a drink, name it.
 
 Return ONLY the 2 sentences, nothing else.`,
           },

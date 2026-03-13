@@ -23,7 +23,7 @@ export interface ClientToServerEvents {
     emoji: string;
   }) => void;
 
-  SEND_GROUP_DRINK: () => void;
+  SEND_GROUP_DRINK: (payload?: { dedicatedTo?: string }) => void;
 
   ACCEPT_DRINK: (payload: {
     cocktailName: string;
@@ -36,8 +36,14 @@ export interface ClientToServerEvents {
   TRIGGER_CONFESSION: () => void;
 
   CONFESSION_VOTE: (payload: {
-    answer: boolean;
+    answer: boolean | null; // null = "I'll never tell"
   }) => void;
+
+  TRIGGER_SPOTLIGHT: (payload: { targetId: string }) => void;
+
+  TRIGGER_TOAST: () => void;
+
+  SUBMIT_GUEST_BOOK: (payload: { message: string }) => void;
 
   TRIGGER_SNAP: () => void;
 
@@ -60,6 +66,12 @@ export interface ServerToClientEvents {
   ROOM_STATE_UPDATE: (state: RoomState) => void;
 
   PARTICIPANT_JOINED: (profile: ParticipantProfile) => void;
+
+  GUEST_ENTRANCE: (payload: {
+    profile: ParticipantProfile;
+    intro: string;
+    arrivalOrder: number;
+  }) => void;
 
   PARTICIPANT_LEFT: (payload: { id: string }) => void;
 
@@ -92,6 +104,7 @@ export interface ServerToClientEvents {
   DRINK_SENT: (payload: {
     cocktail: Cocktail;
     fromGent: string;
+    dedicatedTo?: string;
   }) => void;
 
   DRINK_ACCEPTED: (payload: {
@@ -112,6 +125,8 @@ export interface ServerToClientEvents {
   CONFESSION_RESULT: (payload: {
     question: string;
     yesCount: number;
+    noCount: number;
+    mysteryCount: number;
     total: number;
     commentary: string;
   }) => void;
@@ -125,6 +140,23 @@ export interface ServerToClientEvents {
     act: number;
   }) => void;
 
+  SPOTLIGHT: (payload: {
+    profile: ParticipantProfile;
+    roast: string;
+  }) => void;
+
+  GUEST_BOOK_OPEN: () => void;
+
+  TOAST_SPEECH: (payload: {
+    speech: string;
+  }) => void;
+
+  TOAST_SNAP: () => void;
+
+  TOAST_PHOTO_READY: (payload: {
+    imageUrl: string;
+  }) => void;
+
   VIBE_CHANGED: (payload: {
     mode: VibeMode;
     narration: string;
@@ -136,6 +168,13 @@ export interface ServerToClientEvents {
     sessionTitle: string;
     photos: string[];
     profile: ParticipantProfile;
+    guestBookEntries: string[];
+    mostAlignedWith?: {
+      alias: string;
+      matchScore: number;
+      quip: string;
+    };
+    totalGuests: number;
   }) => void;
 
   ERROR: (payload: {

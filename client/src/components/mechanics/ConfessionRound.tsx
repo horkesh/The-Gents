@@ -18,6 +18,8 @@ export function ConfessionRound() {
   const [result, setResult] = useState<{
     question: string;
     yesCount: number;
+    noCount: number;
+    mysteryCount: number;
     total: number;
     commentary: string;
   } | null>(null);
@@ -66,7 +68,7 @@ export function ConfessionRound() {
     };
   }, [socket]);
 
-  const handleVote = (answer: boolean) => {
+  const handleVote = (answer: boolean | null) => {
     if (voted) return;
     setVoted(true);
     socket?.emit('CONFESSION_VOTE', { answer });
@@ -100,9 +102,12 @@ export function ConfessionRound() {
               </p>
 
               {!voted ? (
-                <div className="flex gap-3 mb-4">
+                <div className="flex gap-2 mb-4">
                   <Button variant="ghost" size="lg" onClick={() => handleVote(false)} className="flex-1">
                     NO
+                  </Button>
+                  <Button variant="secondary" size="md" onClick={() => handleVote(null)} className="px-3">
+                    I'LL NEVER TELL
                   </Button>
                   <Button variant="primary" size="lg" onClick={() => handleVote(true)} className="flex-1">
                     YES
@@ -129,7 +134,12 @@ export function ConfessionRound() {
               <p className="heading-display text-3xl text-gold mb-2">
                 {result.yesCount} / {result.total}
               </p>
-              <p className="text-cream/50 font-body text-sm mb-4">people said yes</p>
+              <p className="text-cream/50 font-body text-sm mb-1">said yes</p>
+              {result.mysteryCount > 0 && (
+                <p className="text-gold/40 font-body text-xs mb-3">
+                  {result.mysteryCount} refused to answer
+                </p>
+              )}
               <p className="heading-display-italic text-cream/60">
                 "{result.commentary}"
               </p>

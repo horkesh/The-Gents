@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, slideUp } from '@/lib/animations';
-import { GENT_ARCHETYPES } from '@the-toast/shared';
-import type { GentRole } from '@the-toast/shared';
+import { GENT_ARCHETYPES, THEMES } from '@the-toast/shared';
+import type { GentRole, PartyTheme } from '@the-toast/shared';
 
 const GENT_ROLES = (Object.values(GENT_ARCHETYPES) as Array<typeof GENT_ARCHETYPES[GentRole]>).map((g) => ({
   role: g.role,
@@ -17,15 +17,25 @@ export function Landing() {
   const [joinCode, setJoinCode] = useState('');
   const [showJoin, setShowJoin] = useState(false);
   const [showRoleSelect, setShowRoleSelect] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<GentRole | null>(null);
+  const [showThemeSelect, setShowThemeSelect] = useState(false);
 
-  const handleHostWithRole = async (role: GentRole) => {
+  const handleRoleSelected = (role: GentRole) => {
+    setSelectedRole(role);
+    setShowRoleSelect(false);
+    setShowThemeSelect(true);
+  };
+
+  const handleHostWithTheme = async (theme: PartyTheme) => {
+    if (!selectedRole) return;
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hostId: crypto.randomUUID(),
-          hostRole: role,
+          hostRole: selectedRole,
+          theme,
         }),
       });
       const { code } = await res.json();
@@ -85,13 +95,42 @@ export function Landing() {
                   JOIN A PARTY
                 </button>
               </motion.div>
+            ) : showThemeSelect ? (
+              <motion.div key="themes" {...fadeIn} className="flex flex-col gap-3">
+                <p className="label text-cream/50 text-center mb-1">CHOOSE A SCENE</p>
+                {(Object.entries(THEMES) as [PartyTheme, typeof THEMES[PartyTheme]][]).map(([key, theme]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleHostWithTheme(key)}
+                    className="w-full py-3 px-4 border border-gold/20 text-cream font-body rounded-lg
+                               hover:bg-gold/10 hover:border-gold/40 active:bg-gold/5 transition-colors
+                               flex items-center gap-3"
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: theme.colorAccent }}
+                    />
+                    <div className="text-left">
+                      <div className="font-bold text-gold text-sm">{theme.label}</div>
+                      <div className="text-cream/40 text-xs">{theme.description}</div>
+                    </div>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setShowThemeSelect(false); setShowRoleSelect(true); }}
+                  className="w-full py-3 border border-cream/10 text-cream/50 font-body rounded-lg
+                             hover:bg-cream/5 transition-colors mt-1"
+                >
+                  BACK
+                </button>
+              </motion.div>
             ) : showRoleSelect ? (
               <motion.div key="roles" {...fadeIn} className="flex flex-col gap-3">
                 <p className="label text-cream/50 text-center mb-1">CHOOSE YOUR ROLE</p>
                 {GENT_ROLES.map(({ role, title, icon, desc }) => (
                   <button
                     key={role}
-                    onClick={() => handleHostWithRole(role)}
+                    onClick={() => handleRoleSelected(role)}
                     className="w-full py-3 px-4 border border-gold/20 text-cream font-body rounded-lg
                                hover:bg-gold/10 hover:border-gold/40 active:bg-gold/5 transition-colors
                                flex items-center gap-3"

@@ -27,6 +27,7 @@ export function DrinkRound() {
         <DrinkCard
           cocktail={activeDrink.cocktail}
           fromGent={activeDrink.fromGent}
+          dedicatedTo={activeDrink.dedicatedTo}
           onAccept={() => handleAccept(activeDrink.cocktail.name)}
           onDodge={() => handleDodge(activeDrink.cocktail.name)}
           onAppear={() => playSfx('pour')}
@@ -39,12 +40,14 @@ export function DrinkRound() {
 function DrinkCard({
   cocktail,
   fromGent,
+  dedicatedTo,
   onAccept,
   onDodge,
   onAppear,
 }: {
   cocktail: Cocktail;
   fromGent: string;
+  dedicatedTo?: string;
   onAccept: () => void;
   onDodge: () => void;
   onAppear: () => void;
@@ -57,7 +60,14 @@ function DrinkCard({
       exit={{ opacity: 0 }}
     >
       <Card glow className="max-w-sm w-full text-center" {...scaleReveal} onAnimationStart={onAppear}>
-        <p className="label text-gold/50 mb-3">{fromGent} serves</p>
+        <p className="label text-gold/50 mb-3">
+          {fromGent} serves
+          {dedicatedTo && (
+            <span className="block text-gold text-xs mt-1">
+              Crafted for {dedicatedTo}
+            </span>
+          )}
+        </p>
 
         {/* Cocktail image */}
         {cocktail.imageUrl && (

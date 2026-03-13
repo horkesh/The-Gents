@@ -13,6 +13,13 @@ interface WrappedData {
   sessionTitle: string;
   photos: string[];
   profile: ParticipantProfile;
+  guestBookEntries: string[];
+  mostAlignedWith?: {
+    alias: string;
+    matchScore: number;
+    quip: string;
+  };
+  totalGuests: number;
 }
 
 export function Wrapped() {
@@ -80,6 +87,11 @@ export function Wrapped() {
           <div className="flex gap-2 mt-3">
             <Badge variant="gold">GUEST</Badge>
           </div>
+          {data.stats.arrivalOrder > 0 && (
+            <p className="text-cream/20 text-xs font-body mt-2 italic">
+              {arrivalOrderText(data.stats.arrivalOrder, data.totalGuests)}
+            </p>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -109,6 +121,42 @@ export function Wrapped() {
             "{data.lorekeeperNote}"
           </p>
         </motion.div>
+
+        {/* Compatibility */}
+        {data.mostAlignedWith && (
+          <motion.div
+            className="bg-charcoal-light rounded-xl border border-gold/10 p-6 mb-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+          >
+            <p className="label text-gold/40 mb-3">YOUR MATCH</p>
+            <p className="heading-display text-xl text-cream mb-1">{data.mostAlignedWith.alias}</p>
+            <p className="text-gold text-2xl font-body mb-2">{data.mostAlignedWith.matchScore}%</p>
+            <p className="heading-display-italic text-cream/50 text-sm">
+              "{data.mostAlignedWith.quip}"
+            </p>
+          </motion.div>
+        )}
+
+        {/* Guest Book */}
+        {data.guestBookEntries.length > 0 && (
+          <motion.div
+            className="bg-charcoal-light rounded-xl border border-cream/5 p-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+          >
+            <p className="label text-cream/30 mb-4 text-center">FROM THE GUEST BOOK</p>
+            <div className="space-y-3">
+              {data.guestBookEntries.map((entry, i) => (
+                <p key={i} className="heading-display-italic text-cream/50 text-sm text-center">
+                  "{entry}"
+                </p>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Photos */}
         {data.photos.length > 0 && (
@@ -150,6 +198,13 @@ export function Wrapped() {
       </div>
     </motion.div>
   );
+}
+
+function arrivalOrderText(order: number, total: number): string {
+  if (order === 1) return 'First to arrive.';
+  if (order === total) return 'Last to arrive — fashionably.';
+  const suffix = order === 2 ? 'nd' : order === 3 ? 'rd' : 'th';
+  return `Arrived ${order}${suffix}.`;
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {

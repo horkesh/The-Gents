@@ -53,9 +53,15 @@ Return ONLY the question text, nothing else. No JSON. No quotes. Just the questi
 export async function generateConfessionCommentary(
   question: string,
   yesCount: number,
+  noCount: number,
+  mysteryCount: number,
   total: number,
   context: SessionContext
 ): Promise<string> {
+  const mysteryNote = mysteryCount > 0
+    ? `\n${mysteryCount} refused to answer — reference this mystery if it's interesting.`
+    : '';
+
   const result = await genai.models.generateContent({
     model: TEXT_MODEL,
     contents: [
@@ -64,8 +70,8 @@ export async function generateConfessionCommentary(
         parts: [
           {
             text: `The confession question was: "${question}"
-Result: ${yesCount} out of ${total} people said YES.
-Vibe: ${context.vibe.energy}
+Result: ${yesCount} said YES, ${noCount} said NO${mysteryCount > 0 ? `, ${mysteryCount} refused to answer` : ''}. Total: ${total}.
+Vibe: ${context.vibe.energy}${mysteryNote}
 
 Generate a single witty, observational commentary line about this result (max 15 words).
 Think: a bartender who's seen everything making a dry observation.

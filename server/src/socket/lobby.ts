@@ -1,12 +1,18 @@
 import type { Namespace, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
 import { joinRoom, leaveRoom } from '../services/room.js';
+import { genai, TEXT_MODEL } from '../services/gemini/client.js';
+import { SYSTEM_INSTRUCTION, ENTRANCE_INTRO_PROMPT } from '../services/gemini/prompts.js';
+import { logger } from '../utils/logger.js';
 
 type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type PartyNamespace = Namespace<ClientToServerEvents, ServerToClientEvents>;
 
 // Track which room each socket is in
 const socketRooms = new Map<string, string>();
+
+// Arrival counters per room (exported for party.ts to use)
+export const arrivalCounters = new Map<string, number>();
 
 export function setupLobbyHandlers(namespace: PartyNamespace, socket: PartySocket) {
   socket.on('JOIN_ROOM', async ({ code, profile }) => {
@@ -20,18 +26,36 @@ export function setupLobbyHandlers(namespace: PartyNamespace, socket: PartySocke
       socketRooms.set(socket.id, code);
       socket.join(code);
 
-      // Notify others
-      socket.to(code).emit('PARTICIPANT_JOINED', {
+      // Track arrival order
+      const currentCount = arrivalCounters.get(code) || 0;
+      const arrivalOrder = currentCount + 1;
+      arrivalCounters.set(code, arrivalOrder);
+
+      const fullProfile = {
         ...profile,
         alias: '',
         portraitUrl: '',
-        traits: ['', '', ''],
+        traits: ['', '', ''] as [string, string, string],
         dossier: '',
         connected: true,
-      });
+      };
+
+      // Notify others
+      socket.to(code).emit('PARTICIPANT_JOINED', fullProfile);
 
       // Send full state to joiner
       socket.emit('ROOM_STATE_UPDATE', room);
+
+      // Generate entrance intro (fire-and-forget, non-blocking)
+      generateEntranceIntro(fullProfile.alias || profile.name, [], arrivalOrder, room.act)
+        .then((intro) => {
+          namespace.to(code).emit('GUEST_ENTRANCE', {
+            profile: fullProfile,
+            intro,
+            arrivalOrder,
+          });
+        })
+        .catch((err) => logger.error('lobby', 'Failed to generate entrance intro', err));
     } catch (err) {
       console.error('[lobby] JOIN_ROOM error:', err);
       socket.emit('ERROR', { message: 'Failed to join room' });
@@ -52,4 +76,27 @@ export function setupLobbyHandlers(namespace: PartyNamespace, socket: PartySocke
       socketRooms.delete(socket.id);
     }
   });
+}
+
+async function generateEntranceIntro(
+  alias: string,
+  traits: string[],
+  arrivalOrder: number,
+  act: number
+): Promise<string> {
+  const result = await genai.models.generateContent({
+    model: TEXT_MODEL,
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: ENTRANCE_INTRO_PROMPT(alias, traits, arrivalOrder, act) }],
+      },
+    ],
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 1.0,
+    },
+  });
+
+  return result.text?.trim() || `${alias} has entered the room.`;
 }

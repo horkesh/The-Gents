@@ -1,18 +1,26 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
+import { useRoomContext } from '@/contexts/RoomContext';
 import { Button } from '../ui/Button';
 import { Spinner } from '../ui/Spinner';
 
 export function KeysPanel() {
   const { socket } = useSocketContext();
+  const { participants } = useRoomContext();
   const [mixing, setMixing] = useState(false);
+  const [dedicatedTo, setDedicatedTo] = useState<string | undefined>();
+
+  const guests = participants.filter((p) => p.role === 'guest');
+  const selectedGuest = dedicatedTo ? guests.find((g) => g.id === dedicatedTo) : undefined;
 
   const handleMix = () => {
     setMixing(true);
-    socket?.emit('SEND_GROUP_DRINK');
-    // Reset after a delay (server will broadcast the drink)
-    setTimeout(() => setMixing(false), 3000);
+    socket?.emit('SEND_GROUP_DRINK', dedicatedTo ? { dedicatedTo } : undefined);
+    setTimeout(() => {
+      setMixing(false);
+      setDedicatedTo(undefined);
+    }, 3000);
   };
 
   return (
@@ -31,18 +39,38 @@ export function KeysPanel() {
           >
             <Spinner size={40} />
             <p className="heading-display-italic text-sm text-cream/50">
-              Mixing something special...
+              {selectedGuest ? `Crafting for ${selectedGuest.alias || selectedGuest.name}...` : 'Mixing something special...'}
             </p>
           </motion.div>
         ) : (
-          <Button variant="gold" size="lg" onClick={handleMix} className="w-full">
-            SHAKE TO MIX
-          </Button>
-        )}
+          <>
+            <Button variant="gold" size="lg" onClick={handleMix} className="w-full">
+              SHAKE TO MIX
+            </Button>
 
-        <p className="text-cream/30 text-xs font-body text-center">
-          Sends a cocktail to everyone
-        </p>
+            {/* Dedication selector */}
+            <div className="w-full">
+              <p className="label text-cream/30 mb-2 text-center">DEDICATE TO</p>
+              <div className="flex flex-wrap gap-1 justify-center">
+                <button
+                  onClick={() => setDedicatedTo(undefined)}
+                  className={`text-xs px-2 py-1 rounded font-body ${!dedicatedTo ? 'bg-gold/20 text-gold' : 'text-cream/30 hover:text-cream/50'}`}
+                >
+                  Everyone
+                </button>
+                {guests.map((guest) => (
+                  <button
+                    key={guest.id}
+                    onClick={() => setDedicatedTo(guest.id)}
+                    className={`text-xs px-2 py-1 rounded font-body ${dedicatedTo === guest.id ? 'bg-gold/20 text-gold' : 'text-cream/30 hover:text-cream/50'}`}
+                  >
+                    {guest.alias || guest.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

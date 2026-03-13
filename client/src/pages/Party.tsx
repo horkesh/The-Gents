@@ -15,6 +15,10 @@ import { DrinkRound } from '@/components/mechanics/DrinkRound';
 import { ConfessionRound } from '@/components/mechanics/ConfessionRound';
 import { GroupSnap } from '@/components/mechanics/GroupSnap';
 import { VibeShiftOverlay } from '@/components/mechanics/VibeShift';
+import { Spotlight } from '@/components/mechanics/Spotlight';
+import { GuestBook } from '@/components/mechanics/GuestBook';
+import { TheToast } from '@/components/mechanics/TheToast';
+import { GuestEntrance } from '@/components/party/GuestEntrance';
 import { GentControlPanel } from '@/components/layout/GentControlPanel';
 import { VideoGrid } from '@/components/video/VideoGrid';
 import { VideoControls } from '@/components/video/VideoControls';
@@ -121,6 +125,10 @@ export function Party() {
       <DrinkRound />
       <ConfessionRound />
       <GroupSnap />
+      <Spotlight />
+      <GuestBook />
+      <TheToast />
+      <GuestEntrance />
       <ActTransition />
       <GentControlPanel />
 

@@ -5,12 +5,12 @@ export const roomRoutes: RouterType = Router();
 
 roomRoutes.post('/rooms', async (req, res) => {
   try {
-    const { hostId, hostRole } = req.body;
+    const { hostId, hostRole, theme } = req.body;
     if (!hostId || !hostRole) {
       res.status(400).json({ error: 'hostId and hostRole are required' });
       return;
     }
-    const room = await createRoom(hostId, hostRole);
+    const room = await createRoom(hostId, hostRole, theme);
     res.json(room);
   } catch (err) {
     console.error('[rooms] Failed to create room:', err);

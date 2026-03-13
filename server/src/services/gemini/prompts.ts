@@ -23,3 +23,40 @@ export const BACKDROP_STYLE = `${IMAGE_STYLE_BASE} Wide establishing shot. Atmos
 export const COCKTAIL_STYLE = `${IMAGE_STYLE_BASE} Overhead or 3/4 angle. Dark surface. Dramatic lighting. One garnish. Condensation on glass. Photorealistic.`;
 
 export const COMPOSITE_STYLE = `${IMAGE_STYLE_BASE} Natural group arrangement. Candid energy, not posed. Match lighting to scene. Apply film grain.`;
+
+export const ENTRANCE_INTRO_PROMPT = (alias: string, traits: string[], arrivalOrder: number, act: number) =>
+  `Generate a cinematic one-line entrance intro for a guest arriving at The Toast party.
+Guest alias: "${alias}"
+Traits: ${traits.join(', ')}
+They are arrival #${arrivalOrder}. Current act: ${act}.
+
+Write ONE cinematic sentence, max 15 words. Think: a narrator announcing someone at an exclusive venue.
+Examples: "The Velvet Fox arrives. The room adjusts itself." or "Late, unhurried, and entirely aware of it."
+Return ONLY the sentence, nothing else.`;
+
+export const SPOTLIGHT_ROAST_PROMPT = (alias: string, traits: string[], dossier: string) =>
+  `Generate a short, affectionate roast for a guest being spotlighted at The Toast party.
+Guest alias: "${alias}"
+Traits: ${traits.join(', ')}
+Dossier: ${dossier}
+
+Write ONE warm, witty roast line, max 20 words. Like roasting a close friend at a dinner party.
+Never mean. Always affectionate.
+Return ONLY the roast, nothing else.`;
+
+export const COMPATIBILITY_QUIP_PROMPT = (alias1: string, alias2: string, matchPercent: number) =>
+  `Two guests at The Toast party were remarkably aligned in their choices.
+"${alias1}" and "${alias2}" matched on ${matchPercent}% of their decisions.
+
+Write ONE short, witty observation about this alignment (max 10 words).
+Examples: "Suspicious." or "Either soulmates or co-conspirators."
+Return ONLY the line, nothing else.`;
+
+export const TOAST_SPEECH_PROMPT = (keyMoments: string[], participantAliases: string[]) =>
+  `The Lorekeeper raises a glass at The Toast party. This is THE toast of the evening — the defining moment.
+Guests present: ${participantAliases.join(', ')}
+Key moments tonight: ${keyMoments.join('. ')}
+
+Write a 2-3 sentence toast speech. Cinematic, warm, referencing the evening's highlights.
+Think: a best man's speech meets a film narrator's closing monologue.
+Return ONLY the speech, nothing else.`;

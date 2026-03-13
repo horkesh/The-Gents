@@ -7,6 +7,7 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { Button } from '@/components/ui/Button';
 import { fadeIn, staggerContainer, staggerItem } from '@/lib/animations';
+import { getStoredProfile } from '@/lib/storage';
 import type { ParticipantProfile } from '@the-toast/shared';
 
 export function Lobby() {
@@ -48,9 +49,8 @@ export function Lobby() {
   // Join room on mount
   useEffect(() => {
     if (!code) return;
-    const stored = sessionStorage.getItem('theToast_profile');
-    if (stored) {
-      const profile = JSON.parse(stored);
+    const profile = getStoredProfile();
+    if (profile) {
       joinRoom(code, profile);
     }
   }, [code, joinRoom]);

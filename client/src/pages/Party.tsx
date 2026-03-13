@@ -21,6 +21,7 @@ import { VideoControls } from '@/components/video/VideoControls';
 import { ParticipantTile } from '@/components/video/ParticipantTile';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { fadeIn } from '@/lib/animations';
+import { getStoredProfile } from '@/lib/storage';
 import type { ParticipantProfile } from '@the-toast/shared';
 
 export function Party() {
@@ -45,9 +46,8 @@ export function Party() {
 
   useEffect(() => {
     if (!code) return;
-    const stored = sessionStorage.getItem('theToast_profile');
-    if (stored) {
-      const profile = JSON.parse(stored);
+    const profile = getStoredProfile();
+    if (profile) {
       joinRoom(code, profile);
     }
   }, [code, joinRoom]);

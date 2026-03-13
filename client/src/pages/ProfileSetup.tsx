@@ -5,6 +5,7 @@ import { ProfileSetupForm } from '@/components/profile/ProfileSetupForm';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { Button } from '@/components/ui/Button';
 import { fadeIn, scaleReveal } from '@/lib/animations';
+import { STORAGE_KEYS } from '@/lib/storage';
 import type { ParticipantProfile } from '@the-toast/shared';
 
 export function ProfileSetup() {
@@ -47,7 +48,7 @@ export function ProfileSetup() {
       setProfile(generatedProfile);
 
       // Store in sessionStorage for lobby/party use
-      sessionStorage.setItem('theToast_profile', JSON.stringify({
+      sessionStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
         id: generatedProfile.id,
         name: generatedProfile.name,
         role: generatedProfile.role,

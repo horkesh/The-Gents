@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
+import { STORAGE_KEYS, getStoredProfile } from '@/lib/storage';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -32,10 +33,9 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       setConnected(true);
 
       // Rejoin room if we had one before disconnect
-      const stored = sessionStorage.getItem('theToast_profile');
-      const code = sessionStorage.getItem('theToast_roomCode');
-      if (stored && code) {
-        const profile = JSON.parse(stored);
+      const profile = getStoredProfile();
+      const code = sessionStorage.getItem(STORAGE_KEYS.roomCode);
+      if (profile && code) {
         s.emit('JOIN_ROOM', { code, profile });
       }
     });
@@ -49,8 +49,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const value = useMemo(() => ({ socket, connected }), [socket, connected]);
+
   return (
-    <SocketContext.Provider value={{ socket, connected }}>
+    <SocketContext.Provider value={value}>
       {children}
     </SocketContext.Provider>
   );

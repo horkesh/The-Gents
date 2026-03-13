@@ -1,5 +1,6 @@
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, useState, useMemo, type ReactNode } from 'react';
 import { useSocketContext } from './SocketContext';
+import { STORAGE_KEYS } from '@/lib/storage';
 import type { RoomState, ParticipantProfile } from '@the-toast/shared';
 
 interface RoomContextValue {
@@ -21,6 +22,18 @@ const RoomContext = createContext<RoomContextValue>({
   leaveRoom: () => {},
   startParty: () => {},
 });
+
+function updateParticipantConnected(prev: RoomState | null, id: string, connected: boolean): RoomState | null {
+  if (!prev) return prev;
+  const participant = prev.participants.find((p) => p.id === id);
+  if (!participant || participant.connected === connected) return prev;
+  return {
+    ...prev,
+    participants: prev.participants.map((p) =>
+      p.id === id ? { ...p, connected } : p
+    ),
+  };
+}
 
 export function RoomProvider({ children }: { children: ReactNode }) {
   const { socket } = useSocketContext();
@@ -44,27 +57,11 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on('PARTICIPANT_LEFT', ({ id }) => {
-      setRoom((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          participants: prev.participants.map((p) =>
-            p.id === id ? { ...p, connected: false } : p
-          ),
-        };
-      });
+      setRoom((prev) => updateParticipantConnected(prev, id, false));
     });
 
     socket.on('PARTICIPANT_RECONNECTED', ({ id }) => {
-      setRoom((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          participants: prev.participants.map((p) =>
-            p.id === id ? { ...p, connected: true } : p
-          ),
-        };
-      });
+      setRoom((prev) => updateParticipantConnected(prev, id, true));
     });
 
     return () => {
@@ -79,7 +76,7 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     (code: string, profile: Pick<ParticipantProfile, 'id' | 'name' | 'role' | 'photoUrl'>) => {
       if (!socket) return;
       setUserId(profile.id);
-      sessionStorage.setItem('theToast_roomCode', code);
+      sessionStorage.setItem(STORAGE_KEYS.roomCode, code);
       socket.connect();
       socket.emit('JOIN_ROOM', { code, profile });
     },
@@ -90,7 +87,8 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     if (!socket) return;
     socket.emit('LEAVE_ROOM');
     socket.disconnect();
-    sessionStorage.removeItem('theToast_roomCode');
+    sessionStorage.removeItem(STORAGE_KEYS.roomCode);
+    setUserId('');
     setRoom(null);
   }, [socket]);
 
@@ -99,14 +97,17 @@ export function RoomProvider({ children }: { children: ReactNode }) {
     socket.emit('START_PARTY');
   }, [socket]);
 
-  const participants = room?.participants || [];
-  const currentUser = participants.find((p) => p.id === userId) || null;
+  const participants = useMemo(() => room?.participants || [], [room]);
+  const currentUser = useMemo(() => participants.find((p) => p.id === userId) || null, [participants, userId]);
   const isGent = currentUser?.role !== 'guest' && currentUser?.role !== undefined;
 
+  const value = useMemo(
+    () => ({ room, participants, currentUser, isGent, joinRoom, leaveRoom, startParty }),
+    [room, participants, currentUser, isGent, joinRoom, leaveRoom, startParty],
+  );
+
   return (
-    <RoomContext.Provider
-      value={{ room, participants, currentUser, isGent, joinRoom, leaveRoom, startParty }}
-    >
+    <RoomContext.Provider value={value}>
       {children}
     </RoomContext.Provider>
   );

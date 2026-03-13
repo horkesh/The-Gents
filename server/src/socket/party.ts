@@ -481,14 +481,33 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
     const guestBookMessages = entries ? Array.from(entries.values()) : [];
     const totalGuests = room.participants.length;
 
-    // Set arrival order on stats from arrivalCounters
-    const arrivalCount = arrivalCounters.get(code) || 0;
+    // Set arrival order on stats
     for (let i = 0; i < room.participants.length; i++) {
       const stats = getOrCreateStats(code, room.participants[i].id);
       if (stats.arrivalOrder === 0) {
-        stats.arrivalOrder = i + 1; // fallback sequential order
+        stats.arrivalOrder = i + 1;
       }
     }
+
+    // Pre-compute all compatibility scores once (avoids O(n²) per participant)
+    const compatMap = new Map<string, { alias: string; matchScore: number }>();
+    for (const p of room.participants) {
+      const compat = computeCompatibility(code, p.id, room.participants);
+      if (compat) compatMap.set(p.id, compat);
+    }
+
+    // Generate compatibility quips in parallel
+    const quipMap = new Map<string, string>();
+    const quipPromises = Array.from(compatMap.entries()).map(async ([pid, compat]) => {
+      const participant = room.participants.find((p) => p.id === pid)!;
+      const quip = await generateCompatibilityQuip(
+        participant.alias || participant.name,
+        compat.alias,
+        compat.matchScore
+      );
+      quipMap.set(pid, quip);
+    });
+    await Promise.all(quipPromises);
 
     for (const participant of room.participants) {
       const stats = getOrCreateStats(code, participant.id);
@@ -499,17 +518,10 @@ async function generateWrappedCards(namespace: PartyNamespace, code: string) {
         keyMoments: roomKeyMoments,
       });
 
-      // Compute compatibility (Feature #4)
-      let mostAlignedWith: { alias: string; matchScore: number; quip: string } | undefined;
-      const compat = computeCompatibility(code, participant.id, room.participants);
-      if (compat) {
-        const quip = await generateCompatibilityQuip(
-          participant.alias || participant.name,
-          compat.alias,
-          compat.matchScore
-        );
-        mostAlignedWith = { ...compat, quip };
-      }
+      const compat = compatMap.get(participant.id);
+      const mostAlignedWith = compat
+        ? { ...compat, quip: quipMap.get(participant.id) || 'Suspicious.' }
+        : undefined;
 
       namespace.to(code).emit('WRAPPED_READY', {
         stats,

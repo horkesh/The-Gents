@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSocketContext } from './SocketContext';
 import type { ActNumber, VibeMode, SceneData, Cocktail, SessionEvent, ParticipantProfile } from '@the-toast/shared';
 
@@ -67,6 +67,9 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     guestBookOpen: false,
   });
 
+  const entranceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spotlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -119,16 +122,20 @@ export function PartyProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on('GUEST_ENTRANCE', (data) => {
+      if (entranceTimerRef.current) clearTimeout(entranceTimerRef.current);
       setState((prev) => ({ ...prev, activeEntrance: data }));
-      setTimeout(() => {
+      entranceTimerRef.current = setTimeout(() => {
         setState((prev) => ({ ...prev, activeEntrance: null }));
+        entranceTimerRef.current = null;
       }, 4000);
     });
 
     socket.on('SPOTLIGHT', (data) => {
+      if (spotlightTimerRef.current) clearTimeout(spotlightTimerRef.current);
       setState((prev) => ({ ...prev, activeSpotlight: data }));
-      setTimeout(() => {
+      spotlightTimerRef.current = setTimeout(() => {
         setState((prev) => ({ ...prev, activeSpotlight: null }));
+        spotlightTimerRef.current = null;
       }, 6000);
     });
 
@@ -158,6 +165,8 @@ export function PartyProvider({ children }: { children: ReactNode }) {
       socket.off('GUEST_ENTRANCE');
       socket.off('SPOTLIGHT');
       socket.off('GUEST_BOOK_OPEN');
+      if (entranceTimerRef.current) clearTimeout(entranceTimerRef.current);
+      if (spotlightTimerRef.current) clearTimeout(spotlightTimerRef.current);
     };
   }, [socket]);
 

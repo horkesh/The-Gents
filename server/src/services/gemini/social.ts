@@ -1,6 +1,32 @@
 import { genai, TEXT_MODEL } from './client.js';
-import { SYSTEM_INSTRUCTION, SPOTLIGHT_ROAST_PROMPT, COMPATIBILITY_QUIP_PROMPT, TOAST_SPEECH_PROMPT } from './prompts.js';
+import { SYSTEM_INSTRUCTION, ENTRANCE_INTRO_PROMPT, SPOTLIGHT_ROAST_PROMPT, COMPATIBILITY_QUIP_PROMPT, TOAST_SPEECH_PROMPT } from './prompts.js';
 import { logger } from '../../utils/logger.js';
+
+/**
+ * Generates a cinematic entrance intro for a guest arriving.
+ */
+export async function generateEntranceIntro(
+  alias: string,
+  traits: string[],
+  arrivalOrder: number,
+  act: number
+): Promise<string> {
+  const result = await genai.models.generateContent({
+    model: TEXT_MODEL,
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: ENTRANCE_INTRO_PROMPT(alias, traits, arrivalOrder, act) }],
+      },
+    ],
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 1.0,
+    },
+  });
+
+  return result.text?.trim() || `${alias} has entered the room.`;
+}
 
 /**
  * Generates a spotlight roast — affectionate, never mean.

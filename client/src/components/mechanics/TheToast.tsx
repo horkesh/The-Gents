@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '@/contexts/SocketContext';
 import { useAudio } from '@/contexts/AudioContext';
@@ -13,6 +13,7 @@ export function TheToast() {
   const [speech, setSpeech] = useState('');
   const [countdown, setCountdown] = useState(3);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const photoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -30,14 +31,18 @@ export function TheToast() {
     socket.on('TOAST_PHOTO_READY', ({ imageUrl }) => {
       setPhotoUrl(imageUrl);
       setPhase(null);
-      // Auto-clear photo after 8 seconds
-      setTimeout(() => setPhotoUrl(null), 8000);
+      if (photoTimerRef.current) clearTimeout(photoTimerRef.current);
+      photoTimerRef.current = setTimeout(() => {
+        setPhotoUrl(null);
+        photoTimerRef.current = null;
+      }, 8000);
     });
 
     return () => {
       socket.off('TOAST_SPEECH');
       socket.off('TOAST_SNAP');
       socket.off('TOAST_PHOTO_READY');
+      if (photoTimerRef.current) clearTimeout(photoTimerRef.current);
     };
   }, [socket]);
 

@@ -1,8 +1,7 @@
 import type { Namespace, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '@the-toast/shared';
 import { joinRoom, leaveRoom } from '../services/room.js';
-import { genai, TEXT_MODEL } from '../services/gemini/client.js';
-import { SYSTEM_INSTRUCTION, ENTRANCE_INTRO_PROMPT } from '../services/gemini/prompts.js';
+import { generateEntranceIntro } from '../services/gemini/social.js';
 import { logger } from '../utils/logger.js';
 
 type PartySocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -76,27 +75,4 @@ export function setupLobbyHandlers(namespace: PartyNamespace, socket: PartySocke
       socketRooms.delete(socket.id);
     }
   });
-}
-
-async function generateEntranceIntro(
-  alias: string,
-  traits: string[],
-  arrivalOrder: number,
-  act: number
-): Promise<string> {
-  const result = await genai.models.generateContent({
-    model: TEXT_MODEL,
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: ENTRANCE_INTRO_PROMPT(alias, traits, arrivalOrder, act) }],
-      },
-    ],
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 1.0,
-    },
-  });
-
-  return result.text?.trim() || `${alias} has entered the room.`;
 }
